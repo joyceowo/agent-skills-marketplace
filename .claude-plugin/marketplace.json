@@ -8,6 +8,11 @@
   },
   "plugins": [
     {
+      "name": "sync-business-logic-docs",
+      "source": "./plugins/sync-business-logic-docs",
+      "description": "Audit and synchronize business-logic documentation from C# source code and Git history."
+    },
+    {
       "name": "code-atlas",
       "source": "./plugins/code-atlas",
       "description": "Turn Git projects into business maps with countries, cities, towns, and importable ZIP packages."

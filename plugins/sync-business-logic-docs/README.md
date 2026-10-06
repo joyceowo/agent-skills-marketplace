@@ -1,6 +1,6 @@
 # Sync Business Logic Docs
 
-從 C# 原始碼與 Git 歷史建立、稽核及同步業務邏輯文件的 Codex 技能。
+從 C# 原始碼與 Git 歷史建立、稽核及同步業務邏輯文件的共用技能，可安裝到 Codex 與 Claude Code。
 
 ## 能力
 
@@ -14,12 +14,20 @@
 
 ## 使用方式
 
-從市集安裝後，在目標 C# 專案的新聊天中選取技能，並提供來源範圍與文件位置，例如：
+依照[市集安裝說明](../../README.md#從-github-安裝)安裝後，在目標 C# 專案的新聊天中要求使用技能，並提供來源範圍與文件位置，例如：
 
 ```text
 請使用 sync-business-logic-docs，將 src/Order/ 的 C# 業務規則同步到
 docs/business/order.md。先做完整覆蓋稽核，再建立同步檢查點。
 ```
+
+Codex 可在技能選單選取 **Sync Business Logic Docs**；Claude Code 可直接輸入：
+
+```text
+/sync-business-logic-docs:sync-business-logic-docs 將 src/Order/ 的 C# 業務規則同步到 docs/business/order.md，先做完整覆蓋稽核。
+```
+
+兩邊使用同一份技能流程、參考文件與模板。`agents/openai.yaml` 僅提供 Codex 顯示資訊；Claude Code 由 `.claude-plugin/plugin.json` 與 `skills/` 載入技能。
 
 也可使用來源與文件映射：
 
