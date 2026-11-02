@@ -1,0 +1,55 @@
+{
+  "system_id": "pmforecast",
+  "system_name": "PMForecast",
+  "classification": "USAGE_ERROR",
+  "impact_scope": "TARGET_SYSTEM",
+  "summary": "範本週別與匯入當週不同會產生週別不符訊息；尚未取得現場檔案，無法確認是舊範本或 A2 遭修改。",
+  "expected_behavior": "以當週匯出的 PMForecast 範本填寫並匯入，保留 A2 與週欄位。",
+  "actual_behavior": "示範提問：匯入時出現 Template week mismatch. Please download the latest PM Forecast template and import again.",
+  "root_cause": "程式已確認：當週資料非空，且 Excel A2 與 GetWeekIDs(currentSunday,currentSunday) 的第一筆 WeekID 不相等時加入錯誤。現場成因仍待核對。",
+  "evidence": [
+    {
+      "path": "PortalAPI_Net5/Areas/Sales.Fcst/Service/PmForecastService.cs",
+      "symbol": "ImportForecast",
+      "observation": "以 currentSunday 取得當週；讀 A2 比較 WeekID，差異時加入固定錯誤訊息。",
+      "certainty": "CONFIRMED"
+    },
+    {
+      "path": "PortalAPI_Net5/Areas/Sales.Fcst/Service/PmForecastService.cs",
+      "symbol": "ExportForecast",
+      "observation": "匯出 A2 寫入當週 WeekID；需重匯出整份範本，避免只改 A2。",
+      "certainty": "CONFIRMED"
+    },
+    {
+      "path": "PortalAPI_Net5/Areas/Sales.Fcst/Service/PmForecastService.cs",
+      "symbol": "ImportForecast",
+      "observation": "有任何 importErrors 時回 ImportDataError 與錯誤檔 FilePath；此路徑不寫入預測 DB。原始上傳檔先前已備存 Storage。",
+      "certainty": "CONFIRMED"
+    }
+  ],
+  "solution_steps": [
+    "重新匯出目前 PMForecast 範本。",
+    "將資料填入新版範本，保留第 1 列隱藏 Key、第 2 列 A2 週別及所有週欄位。",
+    "重新匯入；若仍失敗，提供匯出／匯入時間、A2 值與去識別化錯誤檔，核對週別來源。"
+  ],
+  "requires_code_change": false,
+  "affected_modules": [
+    "PMForecast.ImportForecast",
+    "PMForecast.ExportForecast"
+  ],
+  "changed_files": [],
+  "test_results": [
+    {
+      "name": "原始碼條件核對",
+      "result": "PASS",
+      "details": "已讀取 ImportForecast 與 ExportForecast 實作並確認上述分支。"
+    },
+    {
+      "name": "實際 Excel／API／DB 重現",
+      "result": "NOT_RUN",
+      "details": "未提供隔離環境、現場檔案或實際 Log；未連正式系統。"
+    }
+  ],
+  "status": "ANSWERED",
+  "user_reply": "【PMForecast】這個訊息表示範本 A2 的週別與匯入當週不一致。請重新匯出當週範本，把資料填入新版後再匯入，保留 A2 與週欄位。若仍失敗，請提供匯出／匯入時間及去識別化錯誤檔。此為依程式的操作解法，尚未核對你的實際檔案。"
+}

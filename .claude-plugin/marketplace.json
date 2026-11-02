@@ -16,6 +16,11 @@
       "name": "code-atlas",
       "source": "./plugins/code-atlas",
       "description": "Turn Git projects into business maps with countries, cities, towns, and importable ZIP packages."
+    },
+    {
+      "name": "b2c-platform-tools",
+      "source": "./plugins/b2c-platform-tools",
+      "description": "Diagnose system issues from source code and maintain project scopes and Notion destinations."
     }
   ]
 }

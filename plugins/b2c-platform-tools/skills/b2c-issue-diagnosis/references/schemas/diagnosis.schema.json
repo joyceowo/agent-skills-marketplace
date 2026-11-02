@@ -1,0 +1,163 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "system_id",
+    "system_name",
+    "classification",
+    "impact_scope",
+    "summary",
+    "expected_behavior",
+    "actual_behavior",
+    "root_cause",
+    "evidence",
+    "solution_steps",
+    "requires_code_change",
+    "affected_modules",
+    "changed_files",
+    "test_results",
+    "status",
+    "user_reply"
+  ],
+  "properties": {
+    "system_id": {
+      "type": "string"
+    },
+    "system_name": {
+      "type": "string"
+    },
+    "classification": {
+      "enum": [
+        "USAGE_ERROR",
+        "CODE_BUG",
+        "FEATURE_REQUEST",
+        "UNKNOWN",
+        "OUT_OF_SCOPE"
+      ]
+    },
+    "impact_scope": {
+      "enum": [
+        "TARGET_SYSTEM",
+        "SHARED_COMPONENT",
+        "UNDETERMINED"
+      ]
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1
+    },
+    "expected_behavior": {
+      "type": "string",
+      "minLength": 1
+    },
+    "actual_behavior": {
+      "type": "string",
+      "minLength": 1
+    },
+    "root_cause": {
+      "type": "string",
+      "minLength": 1
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "symbol",
+          "observation",
+          "certainty"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "symbol": {
+            "type": "string",
+            "minLength": 1
+          },
+          "observation": {
+            "type": "string",
+            "minLength": 1
+          },
+          "certainty": {
+            "enum": [
+              "CONFIRMED",
+              "HYPOTHESIS"
+            ]
+          }
+        }
+      }
+    },
+    "solution_steps": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "requires_code_change": {
+      "type": "boolean"
+    },
+    "affected_modules": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "changed_files": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "test_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "result",
+          "details"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "result": {
+            "enum": [
+              "PASS",
+              "FAIL",
+              "NOT_RUN"
+            ]
+          },
+          "details": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "status": {
+      "enum": [
+        "ANSWERED",
+        "NEEDS_INFO",
+        "PROPOSED_FIX",
+        "FIXED",
+        "OUT_OF_SCOPE"
+      ]
+    },
+    "user_reply": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}
