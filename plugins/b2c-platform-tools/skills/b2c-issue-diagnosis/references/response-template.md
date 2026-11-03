@@ -14,7 +14,7 @@
 - 狀態：ANSWERED／NEEDS_INFO／PROPOSED_FIX／FIXED／OUT_OF_SCOPE
 - 待補：會改變判斷的最少資料
 
-只有需要結構化交付且已連接 repository 時，才使用本 Skill 的 [diagnosis.schema.json](schemas/diagnosis.schema.json) 與 `scripts/IssueAssistant.ps1 -WorkspaceRoot <目標工作區> -Action ValidateReport -SystemId <系統> -ReportPath <工作區內相對路徑>`。工具與命令見 [程式碼診斷與修復](repository-workflow.md)。[示範 fixture](../scripts/tests/fixtures/demo-diagnosis.json) 僅供合約測試，不是實際個案證據。一般對話或 Notion 工作卡不強制產生 JSON。
+只有需要結構化交付且已連接 repository 時，才使用本 Skill 的 [diagnosis.schema.json](schemas/diagnosis.schema.json) 與 `scripts/IssueAssistant.ps1 -WorkspaceRoot <目標工作區> -ConfigRoot <外部本機設定目錄> -Action ValidateReport -SystemId <系統> -ReportPath <工作區內相對路徑>`。工具與命令見 [程式碼診斷與修復](repository-workflow.md)。[示範 fixture](../scripts/tests/fixtures/demo-diagnosis.json) 僅供合約測試，不是實際個案證據。一般對話或 Notion 工作卡不強制產生 JSON。
 
 只提供片段時直接以文字交付，不因片段無法通過 repository 報告路徑檢查而停止分析。
 

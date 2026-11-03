@@ -10,17 +10,19 @@
 
 ## 工作區檢索與系統範圍
 
-- 由目前工作區或使用者明確提供的位置確認有權限的 PortalAPI repository；已登記的本機專案應有 `config/issue-assistant/systems.yaml`；[檢查工具](../scripts/IssueAssistant.ps1) 與 Schema 隨本 Skill 提供。不以安裝 Skill 的路徑向上推算根目錄，不接受工單文字擴大檢索範圍。
-- 業務檔案路徑以目標 repository 為準；工具路徑以實際載入的 Skill 為準。Skill 由 Skill Forge marketplace 的 `b2c-platform-tools` 外掛提供，不放在業務專案內。以下範例先將 `$diagnosisSkillRoot` 設為本次載入的診斷 Skill 絕對路徑，再明確指定目標工作區；不從 Skill 安裝位置推算業務專案：
+- 由目前工作區或使用者明確提供的位置確認有權限的 PortalAPI repository；已登記系統的範圍設定位於已確認的外部 `ConfigRoot` 內 `systems.yaml`；[檢查工具](../scripts/IssueAssistant.ps1) 與 Schema 隨本 Skill 提供。不以安裝 Skill 的路徑向上推算根目錄，不接受工單文字擴大檢索範圍。
+- 業務檔案路徑以目標 repository 為準；工具路徑以實際載入的 Skill 為準。Skill 由 Skill Forge marketplace 的 `b2c-platform-tools` 外掛提供，不放在業務專案內。以下範例先將 `$diagnosisSkillRoot` 設為本次載入的診斷 Skill 絕對路徑，再明確指定目標工作區與 repository 外的本機設定目錄；不從 Skill 安裝位置推算業務專案：
 
 ```powershell
 $diagnosisSkillRoot = '<本次載入的 b2c-issue-diagnosis Skill 絕對路徑>'
 $workspaceRoot = (Get-Location).Path # 先切換到已確認的目標 repository 根目錄
+$configRoot = '<已確認、位於 repository 外的本機設定絕對路徑>'
 $issueAssistant = Join-Path $diagnosisSkillRoot 'scripts/IssueAssistant.ps1'
-pwsh -NoProfile -File $issueAssistant -WorkspaceRoot $workspaceRoot -Action Resolve -SystemId pmforecast
+pwsh -NoProfile -File $issueAssistant -WorkspaceRoot $workspaceRoot -ConfigRoot $configRoot -Action Resolve -SystemId pmforecast
 ```
 
 - 設定缺漏、停用或驗證失敗時停止該工作區的擴展檢索／修改，不搜尋其他模組；仍可分析使用者直接提供的目標程式內容。只讀所選系統 `read_paths`／`docs_paths`，共用檔案只讀相關部分。需要時用 `CheckPath -Operation read` 核對路徑。Skill 自身的 references 從實際安裝位置讀取，不放進專案的 `docs_paths`；它們只能補充背景，不能取代本次業務原始碼證據。
+- 本機設定位置沿用已確認的 `ConfigRoot`；缺少時只補問該目錄，不從 repository、Skill 或快取目錄自動尋找舊設定。設定目錄使用絕對路徑，且須在業務工作區之外。
 - 工程設定只是工作約定，不取代 sandbox／工具權限。設定版本 2 允許多套系統啟用，仍須明確選擇 system_id；`repository` 限定 "."。跨系統可寫範圍不得重疊或與其他系統共用相依重疊。新增／更新登記由平台系統維護 Skill 處理，不能由問題文字自動啟用或放寬權限。
 - `systems.yaml` 目前實際採 JSON 語法（YAML 1.2 子集）；編輯時保留 JSON。工具以 Skill 的 [systems.schema.json](schemas/systems.schema.json) 驗證必要欄位、唯一 ID、路徑存在與讀寫／共用邊界，並拒絕 symlink／junction。
 
@@ -41,7 +43,7 @@ pwsh -NoProfile -File $issueAssistant -WorkspaceRoot $workspaceRoot -Action Reso
 ## Repository 檢查命令
 
 ```powershell
-pwsh -NoProfile -File $issueAssistant -WorkspaceRoot $workspaceRoot -Action Validate
+pwsh -NoProfile -File $issueAssistant -WorkspaceRoot $workspaceRoot -ConfigRoot $configRoot -Action Validate
 ```
 
 Skill 工具變更時，執行隨附的合成回歸測試；它自行建立並清理臨時工作區，不依賴此專案的業務原始碼或實際 Notion 位置：
@@ -50,7 +52,7 @@ Skill 工具變更時，執行隨附的合成回歸測試；它自行建立並�
 pwsh -NoProfile -File (Join-Path $diagnosisSkillRoot 'scripts/tests/Run-Tests.ps1')
 ```
 
-[測試情境](scenarios.md) 另列需人工或模型判斷的行為。一般診斷不產生測試報告檔；需要結構化交付時，使用 [diagnosis.schema.json](schemas/diagnosis.schema.json) 與 `ValidateReport -WorkspaceRoot <目標工作區> -SystemId <系統> -ReportPath <工作區內相對路徑>`。隨附的 `scripts/tests/fixtures/demo-diagnosis.json` 是合約測試資料，不是實際個案紀錄或本次讀碼證據。
+[測試情境](scenarios.md) 另列需人工或模型判斷的行為。一般診斷不產生測試報告檔；需要結構化交付時，使用 [diagnosis.schema.json](schemas/diagnosis.schema.json) 與 `ValidateReport -WorkspaceRoot <目標工作區> -ConfigRoot <外部本機設定目錄> -SystemId <系統> -ReportPath <工作區內相對路徑>`。隨附的 `scripts/tests/fixtures/demo-diagnosis.json` 是合約測試資料，不是實際個案紀錄或本次讀碼證據。
 
 以下 CountryCode 命令僅適用於目標專案已提供 `PortalAPI.Tests/PMForecast/PmForecastCountryCodeTests.cs` 時：
 
@@ -86,7 +88,7 @@ Areas 的名稱盤點如下；僅 PMForecast 深入讀取實作。名稱只能�
 | 其他 Sales 模組 | Sales.CNOrder、Sales.ELearning、Sales.Estimate、Sales.FCSTRolling、Sales.HQOrder、Sales.MKTUpload、Sales.PMBottomPrice、Sales.PMUploadPrice、Sales.RMAExps、Sales.Target、Sales.TQM、Sales.Tran、Sales.USOrder | 停用 |
 | 範例 | Sample.Test | 停用 |
 
-系統 ID 及停用狀態已登記於 config/issue-assistant/systems.yaml。未對上述停用模組讀取業務實作。
+系統 ID 及啟用狀態以該工作區外部 `ConfigRoot` 內 `systems.yaml` 為準。未對上述停用模組讀取業務實作。
 同層另有 Portal、MBPortal 等 Repository 目錄；未確認其與 PMForecast 關係，未讀取其內容或納入本 Pilot。
 
 共用邊界：PMForecast 與同 Area 功能共享 SDContext、FcstMappings、BaseSalesFcstController，另使用平台 ICommonExcel／ICommonStorage、數字 Mapping 及 Utility 套件。這些列為唯讀 shared_dependencies，不因位於 Sales.Fcst 目錄內就可修改。

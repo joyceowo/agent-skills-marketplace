@@ -1,6 +1,8 @@
 # 設定契約與檢查
 
-路徑以使用者指定、含 `config/issue-assistant/` 的 repository 根目錄為準；不從 Skill 安裝位置推算。Skill 可以分享，實際系統與 Notion 位置由各工作區設定管理。
+將兩個位置分開處理：`WorkspaceRoot` 是業務 repository，`ConfigRoot` 是該工作區專用、位於 repository 外的本機設定目錄。兩份設定分別為 `<ConfigRoot>/systems.yaml` 與 `<ConfigRoot>/notion.json`；不從 Skill 安裝位置推算，也不回退讀取業務專案內的舊設定。
+
+Windows 建議位置為 `%LOCALAPPDATA%\SkillForge\b2c-platform-tools\<工作區識別>`，每套工作區使用自己的目錄。沿用對話已確認的設定位置；未知時只詢問一次，不從工單或附件改選目的地。設定不放入業務 repository、marketplace 或安裝快取，不隨 Skill 分享。所有 `root_path`、`read_paths`、`write_paths`、`docs_paths` 及共用相依仍相對於明確指定的 `WorkspaceRoot`，不是設定檔所在目錄。
 
 ## systems.yaml
 
@@ -34,18 +36,19 @@ Schema 為診斷 Skill 的 `references/schemas/notion.schema.json`。頂層 syst
 
 ## 命令
 
-檢查工具與 Schema 由 `b2c-issue-diagnosis` Skill 維護，需同時可用。先確認實際安裝位置，再明確傳入目標 `-WorkspaceRoot`；缺少診斷 Skill 時仍可整理設定變更，但須回報尚未執行本機檢查，不建立替代工具或放寬邊界。
+檢查工具與 Schema 由 `b2c-issue-diagnosis` Skill 維護，需同時可用。先確認實際安裝位置，再明確傳入目標 `-WorkspaceRoot` 與設定絕對路徑 `-ConfigRoot`；缺少診斷 Skill 時仍可整理設定變更，但須回報尚未執行本機檢查，不建立替代工具或放寬邊界。
 
 兩個 Skill 隨 Skill Forge 的 `b2c-platform-tools` 外掛一起安裝。由本次載入的維護 Skill 位置找到同一外掛內的診斷 Skill，不從業務專案或固定的快取目錄猜測。以下範例先切換到目標 repository 根目錄，再填入本次載入的診斷 Skill 絕對路徑；傳入實際 system_id，範例使用 pmforecast，工具需 PowerShell 7：
 
 ```powershell
 $diagnosisSkillRoot = '<本次載入的 b2c-issue-diagnosis Skill 絕對路徑>'
 $workspaceRoot = (Get-Location).Path
+$configRoot = '<已確認、位於 repository 外的本機設定絕對路徑>'
 $issueAssistant = Join-Path $diagnosisSkillRoot 'scripts/IssueAssistant.ps1'
-pwsh -NoProfile -File $issueAssistant -WorkspaceRoot $workspaceRoot -Action Validate
-pwsh -NoProfile -File $issueAssistant -WorkspaceRoot $workspaceRoot -Action ValidateNotion
-pwsh -NoProfile -File $issueAssistant -WorkspaceRoot $workspaceRoot -Action Resolve -SystemId pmforecast
-pwsh -NoProfile -File $issueAssistant -WorkspaceRoot $workspaceRoot -Action ResolveNotion -SystemId pmforecast
+pwsh -NoProfile -File $issueAssistant -WorkspaceRoot $workspaceRoot -ConfigRoot $configRoot -Action Validate
+pwsh -NoProfile -File $issueAssistant -WorkspaceRoot $workspaceRoot -ConfigRoot $configRoot -Action ValidateNotion
+pwsh -NoProfile -File $issueAssistant -WorkspaceRoot $workspaceRoot -ConfigRoot $configRoot -Action Resolve -SystemId pmforecast
+pwsh -NoProfile -File $issueAssistant -WorkspaceRoot $workspaceRoot -ConfigRoot $configRoot -Action ResolveNotion -SystemId pmforecast
 ```
 
 修改共用工具或 Schema 時執行診斷 Skill 的 `scripts/tests/Run-Tests.ps1`；測試使用臨時工作區及合成設定，不要求業務原始碼或實際 Notion 位置。專案設定驗證仍須對目標工作區執行上列命令；業務測試依接入系統實際提供的命令執行，不捏造測試檔案。

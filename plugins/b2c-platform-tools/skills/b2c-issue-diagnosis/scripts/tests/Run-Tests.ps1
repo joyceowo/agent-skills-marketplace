@@ -4,9 +4,11 @@ $skillRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
 $tempRoot = [IO.Path]::GetFullPath([IO.Path]::GetTempPath()).TrimEnd([char[]]'\/')
 $testRoot = Join-Path $tempRoot ('b2c-skill-tests-' + [Guid]::NewGuid().ToString('N'))
 $workspace = Join-Path $testRoot 'workspace with spaces'
+$configRoot = Join-Path $testRoot 'private config with spaces'
 try {
 [IO.Directory]::CreateDirectory($workspace) > $null
-. (Join-Path $skillRoot 'scripts/IssueAssistant.ps1') -WorkspaceRoot $workspace
+[IO.Directory]::CreateDirectory($configRoot) > $null
+. (Join-Path $skillRoot 'scripts/IssueAssistant.ps1') -WorkspaceRoot $workspace -ConfigRoot $configRoot
 $script:Passed = 0
 $script:Failed = 0
 
@@ -44,8 +46,6 @@ $forecast = Copy-Value $pm
 $forecast.system_id='forecast'; $forecast.name='Forecast'
 $forecast.read_paths=@($forecastSource,$shared); $forecast.write_paths=@($forecastSource); $forecast.docs_paths=@()
 $settings = @{version=2;systems=@($pm,$forecast,@{system_id='sales-hqorder';name='HQOrder';enabled=$false})}
-$configRoot = Join-Path $workspace 'config/issue-assistant'
-[IO.Directory]::CreateDirectory($configRoot) > $null
 [IO.File]::WriteAllText((Join-Path $configRoot 'systems.yaml'),(Report-Json $settings))
 $syntheticNotion = @{systems=@{pmforecast=@{data_source_url='collection://11111111-1111-4111-8111-111111111111'}}}
 [IO.File]::WriteAllText((Join-Path $configRoot 'notion.json'),(Report-Json $syntheticNotion))
@@ -184,7 +184,7 @@ Check 'No code write without explicit authorization' { Assert-Rejected { Assert-
 Check 'Authorized target code write permitted' { Assert-SystemPath $system $source 'write' $true }
 Check 'Authorization does not expand target scope' {
     Assert-Rejected { Assert-SystemPath $system 'PortalAPI_Net5/Areas/Sales.Fcst/Service/RollingService.cs' 'write' $true }
-    Assert-Rejected { Assert-SystemPath $system 'config/issue-assistant/systems.yaml' 'write' $true }
+    Assert-Rejected { Assert-SystemPath $system $configRoot 'write' $true }
 }
 Check 'Traversal, absolute paths, ADS and wildcards rejected' {
     foreach ($unsafe in @('../PortalAPI/README.md','C:\Windows\win.ini','\\server\share\file','a/../../secret','README.md:secret','PortalAPI_Net5/*')) {
@@ -308,24 +308,72 @@ Check 'Relocated Skill validates an explicitly selected workspace from another w
     $tool = Join-Path $relocatedSkill 'scripts/IssueAssistant.ps1'
     Push-Location $testRoot
     try {
-        $null = & pwsh -NoProfile -NonInteractive -File $tool -WorkspaceRoot $workspace -Action Validate
+        $null = & pwsh -NoProfile -NonInteractive -File $tool -WorkspaceRoot $workspace -ConfigRoot $configRoot -Action Validate
         Assert-True ($LASTEXITCODE -eq 0)
-        $resolved = & pwsh -NoProfile -NonInteractive -File $tool -WorkspaceRoot $workspace -Action Resolve -SystemId pmforecast
+        $resolved = & pwsh -NoProfile -NonInteractive -File $tool -WorkspaceRoot $workspace -ConfigRoot $configRoot -Action Resolve -SystemId pmforecast
         Assert-True ($LASTEXITCODE -eq 0)
         Assert-True (($resolved | ConvertFrom-Json).system_id -ceq 'pmforecast')
-        $binding = & pwsh -NoProfile -NonInteractive -File $tool -WorkspaceRoot $workspace -Action ResolveNotion -SystemId pmforecast
+        $binding = & pwsh -NoProfile -NonInteractive -File $tool -WorkspaceRoot $workspace -ConfigRoot $configRoot -Action ResolveNotion -SystemId pmforecast
         Assert-True ($LASTEXITCODE -eq 0)
         Assert-True (($binding | ConvertFrom-Json).data_source_url -ceq $syntheticNotion.systems.pmforecast.data_source_url)
         $reportFile = Join-Path $workspace 'demo.json'
         [IO.File]::WriteAllText($reportFile,$demoJson)
-        $null = & pwsh -NoProfile -NonInteractive -File $tool -WorkspaceRoot $workspace -Action ValidateReport -SystemId pmforecast -ReportPath demo.json
+        $null = & pwsh -NoProfile -NonInteractive -File $tool -WorkspaceRoot $workspace -ConfigRoot $configRoot -Action ValidateReport -SystemId pmforecast -ReportPath demo.json
         Assert-True ($LASTEXITCODE -eq 0)
-        $null = & pwsh -NoProfile -NonInteractive -File $tool -WorkspaceRoot $workspace -Action CheckPath -SystemId pmforecast -Path $source -Operation write -Authorized
+        $null = & pwsh -NoProfile -NonInteractive -File $tool -WorkspaceRoot $workspace -ConfigRoot $configRoot -Action CheckPath -SystemId pmforecast -Path $source -Operation write -Authorized
         Assert-True ($LASTEXITCODE -eq 0)
     } finally { Pop-Location }
 }
 Check 'CLI rejects an omitted workspace instead of using its installation directory' {
     $null = & pwsh -NoProfile -NonInteractive -File (Join-Path $skillRoot 'scripts/IssueAssistant.ps1') -Action Validate 2>&1
+    Assert-True ($LASTEXITCODE -ne 0)
+}
+
+# A legacy in-workspace config is intentionally present as a decoy. It must never be selected.
+$legacyConfig = Join-Path $workspace 'config/issue-assistant'
+[IO.Directory]::CreateDirectory($legacyConfig) > $null
+[IO.File]::WriteAllText((Join-Path $legacyConfig 'systems.yaml'),(Report-Json $settings))
+[IO.File]::WriteAllText((Join-Path $legacyConfig 'notion.json'),(Report-Json $syntheticNotion))
+$tool = Join-Path $skillRoot 'scripts/IssueAssistant.ps1'
+Check 'CLI requires an explicit config root even when legacy workspace settings exist' {
+    $failure = & pwsh -NoProfile -NonInteractive -File $tool -WorkspaceRoot $workspace -Action Validate 2>&1
+    Assert-True ($LASTEXITCODE -ne 0)
+    Assert-True (($failure | Out-String) -match '-ConfigRoot is required')
+}
+Check 'CLI rejects a nonexistent config root without falling back to legacy settings' {
+    $null = & pwsh -NoProfile -NonInteractive -File $tool -WorkspaceRoot $workspace -ConfigRoot (Join-Path $testRoot 'missing config') -Action Validate 2>&1
+    Assert-True ($LASTEXITCODE -ne 0)
+}
+Check 'CLI rejects a config root inside the workspace' {
+    $null = & pwsh -NoProfile -NonInteractive -File $tool -WorkspaceRoot $workspace -ConfigRoot $legacyConfig -Action Validate 2>&1
+    Assert-True ($LASTEXITCODE -ne 0)
+}
+Check 'CLI does not resolve relative config roots against the workspace or current directory' {
+    $null = & pwsh -NoProfile -NonInteractive -File $tool -WorkspaceRoot $workspace -ConfigRoot 'private config with spaces' -Action Validate 2>&1
+    Assert-True ($LASTEXITCODE -ne 0)
+}
+Check 'CLI reads only the selected external systems and Notion mappings' {
+    $alternateConfig = Join-Path $testRoot 'alternate private config'
+    [IO.Directory]::CreateDirectory($alternateConfig) > $null
+    $alternate = Copy-Value $settings
+    $alternate.systems[0].name = 'External PMForecast'
+    [IO.File]::WriteAllText((Join-Path $alternateConfig 'systems.yaml'),(Report-Json $alternate))
+    $alternateNotion = @{systems=@{pmforecast=@{data_source_url='collection://44444444-4444-4444-8444-444444444444'}}}
+    [IO.File]::WriteAllText((Join-Path $alternateConfig 'notion.json'),(Report-Json $alternateNotion))
+    $selected = & pwsh -NoProfile -NonInteractive -File $tool -WorkspaceRoot $workspace -ConfigRoot $alternateConfig -Action Resolve -SystemId pmforecast
+    Assert-True ($LASTEXITCODE -eq 0)
+    Assert-True (($selected | ConvertFrom-Json).name -ceq 'External PMForecast')
+    $binding = & pwsh -NoProfile -NonInteractive -File $tool -WorkspaceRoot $workspace -ConfigRoot $alternateConfig -Action ResolveNotion -SystemId pmforecast
+    Assert-True ($LASTEXITCODE -eq 0)
+    Assert-True (($binding | ConvertFrom-Json).data_source_url -ceq $alternateNotion.systems.pmforecast.data_source_url)
+}
+Check 'Missing external settings files do not fall back to the workspace' {
+    $emptyConfig = Join-Path $testRoot 'empty private config'
+    [IO.Directory]::CreateDirectory($emptyConfig) > $null
+    $null = & pwsh -NoProfile -NonInteractive -File $tool -WorkspaceRoot $workspace -ConfigRoot $emptyConfig -Action Validate 2>&1
+    Assert-True ($LASTEXITCODE -ne 0)
+    [IO.File]::WriteAllText((Join-Path $emptyConfig 'systems.yaml'),(Report-Json $settings))
+    $null = & pwsh -NoProfile -NonInteractive -File $tool -WorkspaceRoot $workspace -ConfigRoot $emptyConfig -Action ValidateNotion 2>&1
     Assert-True ($LASTEXITCODE -ne 0)
 }
 

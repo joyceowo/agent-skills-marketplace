@@ -1,6 +1,7 @@
 #requires -Version 7.0
 param(
     [string]$WorkspaceRoot,
+    [string]$ConfigRoot,
     [ValidateSet('Validate','Resolve','CheckPath','ValidateReport','ValidateNotion','ResolveNotion')][string]$Action = 'Validate',
     [string]$SystemId,
     [string]$Path,
@@ -15,6 +16,16 @@ $ErrorActionPreference = 'Stop'
 if ([string]::IsNullOrWhiteSpace($WorkspaceRoot)) { throw '-WorkspaceRoot is required; specify the target repository.' }
 $script:ProjectRoot = [IO.Path]::GetFullPath($WorkspaceRoot)
 if (-not (Test-Path -LiteralPath $script:ProjectRoot -PathType Container)) { throw 'WorkspaceRoot must be an existing directory.' }
+# Local configuration is selected independently of both the workspace and the Skill installation.
+if ([string]::IsNullOrWhiteSpace($ConfigRoot)) { throw '-ConfigRoot is required; specify the external local configuration directory.' }
+if (-not [IO.Path]::IsPathFullyQualified($ConfigRoot)) { throw 'ConfigRoot must be an absolute directory path.' }
+$script:ConfigRoot = [IO.Path]::GetFullPath($ConfigRoot)
+if (-not (Test-Path -LiteralPath $script:ConfigRoot -PathType Container)) { throw 'ConfigRoot must be an existing directory.' }
+$workspacePrefix = $script:ProjectRoot.TrimEnd([char[]]'\/') + [IO.Path]::DirectorySeparatorChar
+if ($script:ConfigRoot.TrimEnd([char[]]'\/').Equals($script:ProjectRoot.TrimEnd([char[]]'\/'),[StringComparison]::OrdinalIgnoreCase) -or
+    $script:ConfigRoot.StartsWith($workspacePrefix,[StringComparison]::OrdinalIgnoreCase)) {
+    throw 'ConfigRoot must be outside the target workspace.'
+}
 $script:SchemaRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../references/schemas'))
 
 function Assert-JsonSchema([string]$Json, [string]$SchemaPath) {
@@ -63,7 +74,7 @@ function Test-WithinPath([string]$Candidate, [string]$Allowed) {
 
 function Get-Registry([string]$Json = '') {
     if (-not $Json) {
-        $Json = Get-Content -LiteralPath (Join-Path $script:ProjectRoot 'config/issue-assistant/systems.yaml') -Raw
+        $Json = Get-Content -LiteralPath (Join-Path $script:ConfigRoot 'systems.yaml') -Raw
     }
     # JSON is a YAML 1.2 subset. No YAML packages or new services are required.
     Assert-JsonSchema $Json (Join-Path $script:SchemaRoot 'systems.schema.json')
@@ -120,7 +131,7 @@ function Get-Registry([string]$Json = '') {
 
 function Get-NotionRegistry($Registry, [string]$Json = '') {
     if (-not $Json) {
-        $Json = Get-Content -LiteralPath (Join-Path $script:ProjectRoot 'config/issue-assistant/notion.json') -Raw
+        $Json = Get-Content -LiteralPath (Join-Path $script:ConfigRoot 'notion.json') -Raw
     }
     Assert-JsonSchema $Json (Join-Path $script:SchemaRoot 'notion.schema.json')
     $notion = ConvertFrom-Json -InputObject $Json -AsHashtable
