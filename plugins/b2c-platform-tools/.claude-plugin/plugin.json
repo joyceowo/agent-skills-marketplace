@@ -1,7 +1,7 @@
 {
   "name": "b2c-platform-tools",
-  "version": "0.5.2",
-  "description": "Diagnose system issues from source code and maintain project scopes and Notion destinations.",
+  "version": "0.5.3",
+  "description": "Diagnose system issues with Notion context and optional analyzed scopes; no external configuration required.",
   "author": {
     "name": "Skill Forge"
   },

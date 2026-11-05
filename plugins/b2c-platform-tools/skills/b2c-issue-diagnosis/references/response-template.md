@@ -14,11 +14,11 @@
 - 狀態：ANSWERED／NEEDS_INFO／PROPOSED_FIX／FIXED／OUT_OF_SCOPE
 - 待補：會改變判斷的最少資料
 
-只有需要結構化交付且已連接 repository 時，才使用本 Skill 的 [diagnosis.schema.json](schemas/diagnosis.schema.json) 與 `scripts/IssueAssistant.ps1 -WorkspaceRoot <目標工作區> -ConfigRoot <外部本機設定目錄> -Action ValidateReport -SystemId <系統> -ReportPath <工作區內相對路徑>`。工具與命令見 [程式碼診斷與修復](repository-workflow.md)。[示範 fixture](../scripts/tests/fixtures/demo-diagnosis.json) 僅供合約測試，不是實際個案證據。一般對話或 Notion 工作卡不強制產生 JSON。
+只有需要結構化交付且已連接 repository 時，才使用本 Skill 的 [diagnosis.schema.json](schemas/diagnosis.schema.json) 與 `scripts/IssueAssistant.ps1 -WorkspaceRoot <目標工作區> -ScopeJson <本次分析的範圍JSON> -Action ValidateReport -ReportPath <工作區內相對路徑>`。工具與命令見 [程式碼診斷與修復](repository-workflow.md)。[示範 fixture](../scripts/tests/fixtures/demo-diagnosis.json) 僅供合約測試，不是實際個案證據。一般對話或 Notion 工作卡不強制產生 JSON。
 
 只提供片段時直接以文字交付，不因片段無法通過 repository 報告路徑檢查而停止分析。
 
-完整 JSON 不知道的文字欄寫「尚未確認」，未知清單用 []。未選系統時 system_id、system_name 用空字串，classification 與 status 皆 OUT_OF_SCOPE；不可默選 PMForecast。
+完整 JSON 不知道的文字欄寫「尚未確認」，未知清單用 []。尚無法辨識系統時 system_id、system_name 用空字串，classification=UNKNOWN、status=NEEDS_INFO，補問目標資訊；只有實際越出可存取／授權範圍才用 OUT_OF_SCOPE。未收錄系統不構成 OUT_OF_SCOPE。
 尚未重現的程式風險用 PROPOSED_FIX／NEEDS_INFO，不能 FIXED。Test-Json 及輔助工具只能檢查格式與範圍，測試文字是否真實及根因是否正確仍由診斷者核對。
 
 ## 涉及程式／資料庫變更的交付

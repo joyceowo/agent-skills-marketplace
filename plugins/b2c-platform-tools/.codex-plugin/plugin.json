@@ -1,7 +1,7 @@
 {
   "name": "b2c-platform-tools",
-  "version": "0.5.2",
-  "description": "Diagnose system issues from source code and maintain project scopes and Notion destinations.",
+  "version": "0.5.3",
+  "description": "Diagnose system issues with Notion context and optional analyzed scopes; no external configuration required.",
   "author": {
     "name": "Skill Forge"
   },
@@ -16,8 +16,8 @@
   ],
   "interface": {
     "displayName": "B2C Platform Tools",
-    "shortDescription": "系統問題診斷與範圍設定維護",
-    "longDescription": "直接讀取提供的程式碼，判斷操作問題、程式 Bug 或功能需求並提供解法；維護專案的系統範圍、共用相依與 Notion 位置。檢查工具、Schema 與合成測試隨 Skill 提供，業務程式與 SQL 留在目標專案，實際系統／Notion 設定保存在 repository 外的本機目錄。",
+    "shortDescription": "系統問題診斷與分析範圍維護",
+    "longDescription": "辨識系統、查 Notion、核對程式並依授權解決；Portal 直接使用既有工作看板，其他系統確認使用既有 Notion 或提供其他連結。不要求系統登記或外部設定目錄；工具僅核對當次分析範圍。",
     "developerName": "Skill Forge",
     "websiteURL": "https://github.com/joyceowo/skill-forge",
     "category": "Productivity",
@@ -26,7 +26,7 @@
       "Write"
     ],
     "defaultPrompt": [
-      "使用 b2c-issue-diagnosis，分析我提供的系統程式碼，判斷問題分類並提供解法。",
+      "使用 b2c-issue-diagnosis，辨識這個問題的系統，先查 Notion，再核對程式並協助解決。",
       "使用 b2c-system-maintenance，維護目前工作區的系統範圍與 Notion 位置。"
     ]
   }

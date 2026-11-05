@@ -1,16 +1,18 @@
 # B2C Platform Tools
 
-直接分析使用者提供的程式碼，診斷系統問題並維護專案範圍與 Notion 紀錄位置。兩個 Skill 共用同一套檢查工具與 Schema，支援 Codex 與 Claude Code。
+依「辨識系統 → 查 Notion → 核對程式 → 解決與驗證 → 更新 Notion」處理系統問題與需求。支援 Codex 與 Claude Code。
 
 | Skill | 用途 |
 | --- | --- |
-| [b2c-issue-diagnosis](skills/b2c-issue-diagnosis/SKILL.md) | 分辨操作問題、程式 Bug、功能需求或證據不足，提供解法與驗證方式，並在已確認的 Notion 位置記錄個案。 |
-| [b2c-system-maintenance](skills/b2c-system-maintenance/SKILL.md) | 維護目標專案的系統登記、讀寫範圍、共用相依與 Notion 目的地。 |
+| [b2c-issue-diagnosis](skills/b2c-issue-diagnosis/SKILL.md) | 辨識目標、核對程式、依授權解決並更新工作卡。 |
+| [b2c-system-maintenance](skills/b2c-system-maintenance/SKILL.md) | 依要求整理目標系統的程式參考、共用相依及可選分析範圍。 |
 
-依照[市集說明](../../README.md)安裝 `b2c-platform-tools`，在目標專案的新聊天中指定 Skill、系統與問題。Claude Code 的呼叫名稱為 `/b2c-platform-tools:b2c-issue-diagnosis` 與 `/b2c-platform-tools:b2c-system-maintenance`。
+不需先建立、登記或啟用系統，不要求 ConfigRoot、systems.yaml 或 notion.json。程式範圍依當次工作區、實作與使用者授權核對；[系統參考](skills/b2c-issue-diagnosis/references/systems/index.md) 只是定位線索。
 
-一般程式片段分析不需 PowerShell 或完整 repository。本機設定／範圍檢查需要 PowerShell 7，執行隨附工具時明確指定業務 `-WorkspaceRoot` 與外部本機設定目錄 `-ConfigRoot`；命令見[程式碼診斷與修復](skills/b2c-issue-diagnosis/references/repository-workflow.md)。工具回歸測試位於診斷 Skill 的 `scripts/tests/Run-Tests.ps1`，使用自行建立的臨時工作區與合成資料。
+Portal／PortalAPI／B2C Portal 所屬系統直接使用既有 Notion 工作看板；另開新案也不重問位置。非 Portal 需要記錄且尚無使用者目的地決定時，以提問卡片詢問「使用既有 Notion」或「提供其他 Notion 連結」；已有適用答案就沿用。詳見 [目的地規則](skills/b2c-issue-diagnosis/references/systems/b2c-portal/notion.md)。
 
-目標專案只保留業務程式、業務測試及 SQL。Skill 專用的 `systems.yaml` 與 `notion.json` 存放於 repository 外的本機目錄，Windows 建議 `%LOCALAPPDATA%\SkillForge\b2c-platform-tools\<工作區識別>`；兩份設定的內容不變，原有專案內設定需搬到此處，執行工具時明確傳入絕對路徑 `-ConfigRoot`，不回退讀取舊位置。這個外掛不提供實際專案設定、Notion ID、憑證或業務原始碼。首次接入由維護 Skill 依[設定契約](skills/b2c-system-maintenance/references/configuration.md)整理，沒有預設系統或預設 Notion 位置。PMForecast 參考索引是歷史背景，不代表已取得目標專案原始碼或授權。
+先以同系統、標題與未完成狀態找工作卡候選，經使用者確認後讀取並更新同卡。Notion 連線或權限不足時回報未同步，繼續不依賴目的地的已授權工作，不重問本機設定路徑。
 
-Notion 紀錄需要執行環境已有可用的 Notion 連接工具，並確認接收者自己的目的地及權限；外掛不代為安裝或連接服務。缺少工具時可先完成分析，須回報尚未同步。修改業務程式沿用使用者的明確授權；不自動部署、執行 SQL 或傳送訊息。
+依照[市集說明](../../README.md)安裝；Codex 使用 $b2c-issue-diagnosis，Claude Code 使用 /b2c-platform-tools:b2c-issue-diagnosis。修改業務程式沿用使用者授權，不自動部署、執行 SQL 或傳送訊息。
+
+一般分析不需 PowerShell。可選工具需 PowerShell 7，只接受明確工作區與當次分析範圍，見[範圍契約](skills/b2c-system-maintenance/references/configuration.md)。工具測試位於診斷 Skill 的 scripts/tests/Run-Tests.ps1，僅使用合成資料。
