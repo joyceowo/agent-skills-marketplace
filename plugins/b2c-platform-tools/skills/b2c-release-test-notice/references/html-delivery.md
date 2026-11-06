@@ -40,7 +40,7 @@ python <skill>/scripts/render_notice.py --input <notice.json> --output <通知�
   "title": "訂單查詢新增交貨區間",
   "highlight": "2026/11/06",
   "blocks": [
-    {"kind": "paragraph", "text": "訂單查詢已於 2026/11/06 上線交貨區間篩選。"},
+    {"kind": "paragraph", "text": "「訂單查詢新增交貨區間」已於 2026/11/06 上線。"},
     {"kind": "numbered", "number": 1, "text": "可依預計交貨起訖日篩選訂單。"},
     {"kind": "paragraph", "text": "操作入口：訂單管理 → 訂單查詢"},
     {"kind": "heading", "text": "01｜設定交貨區間"},
@@ -52,6 +52,8 @@ python <skill>/scripts/render_notice.py --input <notice.json> --output <通知�
 `type` 可用 `release` 或 `test`。依提問卡片選擇填寫 `language` 為 `zh-Hant`（繁體中文）、`en`（英文）或 `bilingual`（中英雙語）。既有輸入未含 `language` 時沿用繁體中文。單語將該語言的標題寫入 `title`，雙語將中文標題寫入 `title`、英文標題寫入 `title_en`，並在同一個 `blocks` 陣列先放中文正文，再放英文正文。產生器會自動附上各語言對應的通知類型。請在輸入中提供已整理好的文字，產生器依內容排版。
 
 `highlight` 選填，僅標色正文中相同的文字，不代表日期或部署狀態已確認。文字段落支援 `heading`、`paragraph`、`numbered`、`emphasis`；`numbered` 的 `number` 為從 1 開始的整數，雙語可在英文重點從 1 重新編號。既有的 `bullet` 輸入仍支援。圖片支援 PNG、JPEG，`alt` 必填，`caption` 選填。無截圖就省略圖片區塊。使用文字欄位，不在輸入中塞 HTML 或 JavaScript。
+
+將已確認的系統與功能名稱填入 `title`，並在同語言的正文首句沿用相同文字。雙語時英文版同樣沿用 `title_en`，兩種語言須描述相同的功能範圍。
 
 「複製郵件主旨」將單行純文字複製到剪貼簿，供貼到 Outlook 主旨欄。「複製郵件內容」供貼到信件正文。上線郵件主旨使用固定前綴 `📢 [上線通知] 數位平台`，加一個空格接系統與功能，例如 `📢 [上線通知] 數位平台 PM Forecast 國家角度與上傳檢核功能`。雙語主旨以 ` / ` 分隔中文和英文，整行只加一次前綴。測試通知主旨使用對應語言的測試通知標題。Portal 公告標題由同一份 HTML 另行提供，格式為 `[上線通知] - 系統與功能`。
 
