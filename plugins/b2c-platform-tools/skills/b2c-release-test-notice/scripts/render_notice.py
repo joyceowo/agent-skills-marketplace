@@ -38,7 +38,7 @@ LABELS = {
     'zh-Hant': {'release': '上線通知', 'test': '測試通知'},
     'en': {'release': 'Release Notice', 'test': 'Test Notice'},
 }
-TEXT_KINDS = {'heading', 'paragraph', 'bullet', 'emphasis'}
+TEXT_KINDS = {'heading', 'paragraph', 'bullet', 'numbered', 'emphasis'}
 
 
 def required_text(obj, key):
@@ -73,7 +73,13 @@ def read_notice(path):
             raise ValueError('Each block must be an object')
         kind = entry.get('kind')
         if isinstance(kind, str) and kind in TEXT_KINDS:
-            blocks.append({'kind': kind, 'text': required_text(entry, 'text')})
+            block = {'kind': kind, 'text': required_text(entry, 'text')}
+            if kind == 'numbered':
+                number = entry.get('number')
+                if type(number) is not int or number < 1:
+                    raise ValueError('numbered blocks require a positive integer number')
+                block['number'] = number
+            blocks.append(block)
         elif kind == 'image':
             source = path.parent / required_text(entry, 'path')
             with Image.open(source) as original:
@@ -129,6 +135,8 @@ def marked_text(text, highlight, render):
 
 
 def block_text(block):
+    if block['kind'] == 'numbered':
+        return f"{block['number']}. {block['text']}"
     return ('• ' if block['kind'] == 'bullet' else '') + block['text']
 
 
@@ -159,6 +167,7 @@ def html_rows(title, highlight, blocks, brand, title_png):
             'heading': (15.75, 22, BLUE, 12, 4),
             'caption': (9.75, 14, GRAY, 4, 5),
             'bullet': (12, 18, INK, 2, 2),
+            'numbered': (12, 18, INK, 2, 2),
         }.get(kind, (12, 18, INK, 6, 0))
 
         def run(text, ink=color):

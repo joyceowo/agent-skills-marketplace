@@ -1,5 +1,21 @@
 # HTML 交付方式
 
+## 通知順序
+
+1. **先說結論。** 首句交代這次上線或要測試的功能；已知日期可在這裡標紅，未提供就省略。標題可寫「PM Forecast 國家角度與上傳檢核功能上線通知」。
+2. **逐點列重點。** 用「本次更新重點」或「測試重點」帶出編號，每點一個變更、影響或檢核結果。刪除首句已交代的資訊、重複的操作敘述與多餘修飾。
+3. **說明怎麼做。** 有需要才列「操作入口：選單 → 功能」與一行明確動作；需要多步時，依實際順序使用短句及小標題。操作入口和圖上的欄位名稱應與系統一致。
+
+保留品牌頁首、分隔色帶、頁尾和 HTML 工具列。用原有的單欄版面；不要為內容另外加入表格、裝飾、重複小標或空白列。
+
+## 操作圖
+
+下載、上傳等不同操作分開呈現，一個小標題接一張圖與短圖說，例如「01｜下載範本」與「02｜上傳 Forecast」。依閱讀順序由上往下排列，不把兩個操作併排拼成一圖。
+
+在截圖本身加上紅色編號點與框，依序標出使用者實際要點選的按鈕、欄位或檢核訊息；需要指出欄位或補一句短說明時，用引導線接到框旁。以「下載範本」為例，可在匯出範本按鈕、國家欄位、匯出按鈕各標 1、2、3，並用引導線指向國家欄位。保留辨識頁面所需的上下文，讓標註和控件文字都清楚可見。嵌入已標註的 PNG 或 JPEG，讓 Outlook 和 PDF 使用同一張圖。
+
+## 產生檔案
+
 將已核對的內容寫成一份 UTF-8 JSON，再呼叫 `scripts/render_notice.py`。可用宿主的文件/PDF Python 環境；腳本需要 `Pillow`、`reportlab`、`pypdf`。Windows 預設使用微軟正黑體，其他環境可傳入支援繁體中文的 TrueType 字型。優先使用可用的內附工具，無須公開上傳截圖。
 
 ```text
@@ -17,7 +33,9 @@ python <skill>/scripts/render_notice.py --input <notice.json> --output <通知�
   "blocks": [
     {"kind": "paragraph", "text": "訂單查詢已於 2026/11/06 上線交貨區間篩選。"},
     {"kind": "heading", "text": "本次更新重點"},
-    {"kind": "bullet", "text": "可依預計交貨起訖日篩選訂單。"},
+    {"kind": "numbered", "number": 1, "text": "可依預計交貨起訖日篩選訂單。"},
+    {"kind": "paragraph", "text": "操作入口：訂單管理 → 訂單查詢"},
+    {"kind": "heading", "text": "01｜設定交貨區間"},
     {"kind": "image", "path": "filter.png", "alt": "訂單查詢的交貨區間欄位", "caption": "圖 1｜設定交貨區間"}
   ]
 }
@@ -25,7 +43,7 @@ python <skill>/scripts/render_notice.py --input <notice.json> --output <通知�
 
 `type` 可用 `release` 或 `test`。依提問卡片選擇填寫 `language` 為 `zh-Hant`（繁體中文）、`en`（英文）或 `bilingual`（中英雙語）。既有輸入未含 `language` 時沿用繁體中文。單語將該語言的標題寫入 `title`，雙語將中文標題寫入 `title`、英文標題寫入 `title_en`，並在同一個 `blocks` 陣列先放中文正文，再放英文正文。產生器會自動附上各語言對應的通知類型。請在輸入中提供已整理好的文字，產生器依內容排版。
 
-`highlight` 選填，僅標色正文中相同的文字，不代表日期或部署狀態已確認。文字段落支援 `heading`、`paragraph`、`bullet`、`emphasis`。圖片支援 PNG、JPEG，`alt` 必填，`caption` 選填。無截圖就省略圖片區塊。使用文字欄位，不在輸入中塞 HTML 或 JavaScript。
+`highlight` 選填，僅標色正文中相同的文字，不代表日期或部署狀態已確認。文字段落支援 `heading`、`paragraph`、`numbered`、`emphasis`；`numbered` 的 `number` 為從 1 開始的整數，雙語可在英文重點從 1 重新編號。既有的 `bullet` 輸入仍支援。圖片支援 PNG、JPEG，`alt` 必填，`caption` 選填。無截圖就省略圖片區塊。使用文字欄位，不在輸入中塞 HTML 或 JavaScript。
 
 版面特別保留 Outlook 貼上修正：正文使用單層 `width="100%"` 表格；表格本身不設 `align` 或 `float`，靠左設定放在儲存格及文字。每列使用 inline 字型、字級、顏色、行距、內距和背景，圖片指定尺寸及替代文字。複製結果為郵件正文，避免工具列、外層容器和腳本進入郵件。傳統 Outlook 貼上時選「保留來源格式」，在原信表格外的空白段落貼上。
 
