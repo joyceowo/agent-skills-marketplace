@@ -10,7 +10,7 @@ import os
 from pathlib import Path
 import re
 
-from PIL import Image, ImageDraw, ImageFont, ImageOps
+from PIL import Image, ImageOps
 from pypdf import PdfReader
 from reportlab.lib.colors import HexColor
 from reportlab.lib.pagesizes import A4
@@ -38,6 +38,8 @@ LABELS = {
     'zh-Hant': {'release': '上線通知', 'test': '測試通知'},
     'en': {'release': 'Release Notice', 'test': 'Test Notice'},
 }
+RELEASE_SUBJECT_PREFIX = '📢 [上線通知] 數位平台 '
+PORTAL_TITLE_PREFIX = '[上線通知] - '
 TEXT_KINDS = {'heading', 'paragraph', 'bullet', 'numbered', 'emphasis'}
 
 
@@ -57,10 +59,24 @@ def read_notice(path):
         raise ValueError('language must be zh-Hant, en or bilingual')
     title_fields = [('zh-Hant', 'title'), ('en', 'title_en')] if language == 'bilingual' else [(language, 'title')]
     titles = []
+    subject_parts = []
     for title_language, field in title_fields:
         label = LABELS[title_language][data['type']]
         title = required_text(data, field)
-        titles.append(title if title.casefold().endswith(label.casefold()) else f'{title} {label}')
+        display_title = title if title.casefold().endswith(label.casefold()) else f'{title} {label}'
+        titles.append(display_title)
+        subject_title = ' '.join(display_title.split())
+        if data['type'] == 'release':
+            subject_title = ' '.join(title.split())
+            subject_title = subject_title.removeprefix(RELEASE_SUBJECT_PREFIX).removeprefix(PORTAL_TITLE_PREFIX)
+            if subject_title.casefold().endswith(label.casefold()):
+                subject_title = subject_title[:-len(label)].rstrip() or subject_title
+        subject_parts.append(subject_title)
+    subject = ' / '.join(subject_parts)
+    portal_title = ''
+    if data['type'] == 'release':
+        portal_title = PORTAL_TITLE_PREFIX + subject
+        subject = RELEASE_SUBJECT_PREFIX + subject
     highlight = data.get('highlight', '')
     if not isinstance(highlight, str):
         raise ValueError('highlight must be text')
@@ -93,33 +109,7 @@ def read_notice(path):
                 blocks.append({'kind': 'caption', 'text': required_text(entry, 'caption')})
         else:
             raise ValueError(f'Unknown block kind: {kind}')
-    return '\n'.join(titles), highlight.strip(), blocks, 'mul' if language == 'bilingual' else language
-
-
-def title_image(title, font_path, bell):
-    font = ImageFont.truetype(str(font_path), 54)
-    lines = []
-    current = ''
-    for char in title:
-        if char == '\n' or (current and font.getlength(current + char) > (MAIL_WIDTH - 65) * 2):
-            lines.append(current)
-            current = ''
-        if char != '\n':
-            current += char
-    if current:
-        lines.append(current)
-    artwork = Image.new('RGB', (MAIL_WIDTH * 2, (25 + 33 * len(lines)) * 2), 'white')
-    with Image.open(BytesIO(bell)) as original:
-        icon = original.convert('RGBA').resize((48, 48), Image.Resampling.LANCZOS)
-    artwork.paste(icon, (0, 34), icon)
-    draw = ImageDraw.Draw(artwork)
-    for index, line in enumerate(lines):
-        draw.text((62, 58 + 66 * index), line, fill=BLUE, font=font, anchor='lm')
-    end = 78 + round(font.getlength(lines[-1]))
-    artwork.paste(icon, (end, 34 + 66 * (len(lines) - 1)), icon)
-    output = BytesIO()
-    artwork.save(output, format='PNG')
-    return output.getvalue()
+    return '\n'.join(titles), subject, portal_title, highlight.strip(), blocks, 'mul' if language == 'bilingual' else language
 
 
 def image_size(data):
@@ -140,7 +130,7 @@ def block_text(block):
     return ('• ' if block['kind'] == 'bullet' else '') + block['text']
 
 
-def html_rows(title, highlight, blocks, brand, title_png):
+def html_rows(title, highlight, blocks, brand, bell_path):
     def image(data, alt):
         width, height = image_size(data)
         scaled = round(MAIL_WIDTH * height / width)
@@ -155,8 +145,18 @@ def html_rows(title, highlight, blocks, brand, title_png):
                 f'style="padding:{padding};mso-padding-alt:{padding};text-align:left;vertical-align:top;'
                 f'background-color:#FFFFFF;">{content}</td></tr>')
 
+    bell = base64.b64encode(bell_path.read_bytes()).decode('ascii')
+    icon = (f'<img src="data:image/png;base64,{bell}" width="24" height="24" alt="" '
+            'style="width:24px;height:24px;border:0;vertical-align:middle;">')
+    title_text = escape(title).replace('\n', '<br>')
+    title_font = f'{FONT_STYLE}font-size:20pt;font-weight:bold;color:{BLUE};'
+    title_heading = (
+        f'<h1 align="left" style="{title_font}margin:0;text-align:left;line-height:25pt;'
+        f'mso-line-height-rule:at-least;">{icon} '
+        f'<font face="{MAIL_FONT}" color="{BLUE}" style="{title_font}">{title_text}</font> {icon}</h1>'
+    )
     rows = [row(image(brand['header'], 'GIGABYTE 數位平台')),
-            row('<h1 align="left" style="margin:0;text-align:left;">'+image(title_png, title)+'</h1>'),
+            row(title_heading, top=7, bottom=7),
             row(image(brand['divider'], '藍綠漸層分隔色帶'), bottom=13)]
     for block in blocks:
         kind = block['kind']
@@ -186,7 +186,7 @@ def html_rows(title, highlight, blocks, brand, title_png):
     return '\n'.join(rows)
 
 
-def render_pdf(title, highlight, blocks, brand, font_path, bold_path):
+def render_pdf(title, highlight, blocks, brand, bell_path, font_path, bold_path):
     pdfmetrics.registerFont(TTFont('NoticeRegular', str(font_path)))
     pdfmetrics.registerFont(TTFont('NoticeBold', str(bold_path)))
     width, height = A4
@@ -232,7 +232,8 @@ def render_pdf(title, highlight, blocks, brand, font_path, bold_path):
         value = escape(text).replace('\n', '<br/>')
         return f'<font color="{color}">{value}</font>' if color else value
 
-    story = [Paragraph(run(title), title_style), picture(brand['divider'], 8), Spacer(1, 9)]
+    icon = f'<img src="{escape(bell_path.as_posix())}" width="16" height="16" valign="middle"/>'
+    story = [Paragraph(f'{icon} {run(title)} {icon}', title_style), picture(brand['divider'], 8), Spacer(1, 9)]
     index = 0
     while index < len(blocks):
         block = blocks[index]
@@ -262,22 +263,15 @@ class NoticeText(HTMLParser):
     def __init__(self):
         super().__init__()
         self.in_notice = False
-        self.in_title = False
         self.parts = []
 
     def handle_starttag(self, tag, attributes):
         if tag == 'main':
             self.in_notice = True
-        if self.in_notice and tag == 'h1':
-            self.in_title = True
-        if self.in_title and tag == 'img':
-            self.parts.append(dict(attributes)['alt'])
 
     def handle_endtag(self, tag):
         if tag == 'main':
             self.in_notice = False
-        if tag == 'h1':
-            self.in_title = False
 
     def handle_data(self, data):
         if self.in_notice:
@@ -316,14 +310,16 @@ def main():
     if not args.font.is_file() or not args.bold_font.is_file():
         parser.error('Specify installed Traditional Chinese TrueType fonts with --font and --bold-font')
     try:
-        title, highlight, blocks, language = read_notice(args.input)
+        title, subject, portal_title, highlight, blocks, language = read_notice(args.input)
         brand = {name: (ASSETS/f'brand-{name}.png').read_bytes() for name in ('header', 'divider', 'footer')}
-        title_png = title_image(title, args.bold_font, (ASSETS/'bell.png').read_bytes())
-        pdf = render_pdf(title, highlight, blocks, brand, args.font, args.bold_font)
-        tokens = {'LANG': language, 'TITLE': escape(title), 'ROWS': html_rows(title, highlight, blocks, brand, title_png),
+        bell_path = ASSETS/'bell.png'
+        pdf = render_pdf(title, highlight, blocks, brand, bell_path, args.font, args.bold_font)
+        tokens = {'LANG': language, 'TITLE': escape(title), 'SUBJECT': escape(subject),
+                  'PORTAL_TITLE': escape(portal_title),
+                  'ROWS': html_rows(title, highlight, blocks, brand, bell_path),
                   'PDF': base64.b64encode(pdf).decode('ascii')}
         template = (ASSETS/'notice-template.html').read_text(encoding='utf-8')
-        document = re.sub(r'@@(LANG|TITLE|ROWS|PDF)@@', lambda match: tokens[match[1]], template)
+        document = re.sub(r'@@(LANG|TITLE|SUBJECT|PORTAL_TITLE|ROWS|PDF)@@', lambda match: tokens[match[1]], template)
         pages = verify(document, title, blocks)
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(document, encoding='utf-8')
