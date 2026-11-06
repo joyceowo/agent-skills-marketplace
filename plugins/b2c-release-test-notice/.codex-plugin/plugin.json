@@ -1,0 +1,33 @@
+{
+  "name": "b2c-release-test-notice",
+  "version": "1.0.0",
+  "description": "Create B2C release and test notices with optional Portal announcements for releases.",
+  "author": {
+    "name": "Skill Forge"
+  },
+  "skills": "./skills/",
+  "repository": "https://github.com/joyceowo/skill-forge",
+  "homepage": "https://github.com/joyceowo/skill-forge/tree/main/plugins/b2c-release-test-notice",
+  "keywords": [
+    "release-notice",
+    "test-notice",
+    "notion",
+    "outlook",
+    "portal"
+  ],
+  "interface": {
+    "displayName": "B2C 上線／測試通知",
+    "shortDescription": "製作 B2C 上線與測試通知",
+    "longDescription": "依 Notion 連結或貼上的內容製作上線與測試通知。交付可複製到 Outlook 並下載 PDF 的 HTML。上線通知可依授權建立 Portal 公告。",
+    "developerName": "Skill Forge",
+    "websiteURL": "https://github.com/joyceowo/skill-forge",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "使用 b2c-release-test-notice 製作上線通知，並依需要建立附有 Document.pdf 的 Portal 公告。"
+    ]
+  }
+}

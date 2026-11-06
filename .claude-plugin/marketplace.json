@@ -20,7 +20,12 @@
     {
       "name": "b2c-platform-tools",
       "source": "./plugins/b2c-platform-tools",
-      "description": "Diagnose B2C system issues and generate release or test notices with optional Portal announcements."
+      "description": "Diagnose B2C system issues, update work cards, and maintain system knowledge on request."
+    },
+    {
+      "name": "b2c-release-test-notice",
+      "source": "./plugins/b2c-release-test-notice",
+      "description": "Create B2C release and test notices with optional Portal announcements for releases."
     }
   ]
 }

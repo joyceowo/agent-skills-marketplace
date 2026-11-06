@@ -6,7 +6,8 @@
 | --- | --- |
 | [b2c-issue-diagnosis](skills/b2c-issue-diagnosis/SKILL.md) | 辨識目標、查同案與規格、核對程式，依授權解決並更新工作卡。 |
 | [b2c-system-maintenance](skills/b2c-system-maintenance/SKILL.md) 系統知識維護 | 保存業務規則、流程、資料關係與設計原因，標示知識依據；僅在使用者明確要求時執行。 |
-| [b2c-release-test-notice](skills/b2c-release-test-notice/SKILL.md) 上線／測試通知 | 從 Notion 或貼上的文字產生單一通知 HTML，可複製到 Outlook 並下載 `Document.pdf`。上線通知可依授權建立 System 公告，儲存後核對公告編號及附件。 |
+
+上線／測試通知請單獨安裝 [B2C 上線／測試通知](../b2c-release-test-notice/README.md)。
 
 不需先建立／登記系統，不要求外部設定目錄。Skill 先使用對話、畫面、API 與工作區線索辨識，仍無法確定才詢問；未收錄系統照常處理。[系統參考](skills/b2c-issue-diagnosis/references/systems/index.md) 只在相關時讀取。
 

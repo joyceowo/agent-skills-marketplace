@@ -39,6 +39,18 @@
         "authentication": "ON_INSTALL"
       },
       "category": "Productivity"
+    },
+    {
+      "name": "b2c-release-test-notice",
+      "source": {
+        "source": "local",
+        "path": "./plugins/b2c-release-test-notice"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
     }
   ]
 }
