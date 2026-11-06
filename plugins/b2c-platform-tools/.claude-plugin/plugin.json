@@ -1,7 +1,7 @@
 {
   "name": "b2c-platform-tools",
   "version": "0.5.27",
-  "description": "Diagnose system issues with Notion context and optional analyzed scopes; no external configuration required. Create B2C release and test notices with optional Portal announcements.",
+  "description": "Diagnose system issues with Notion context and record changes and validation in the work card. Create B2C release and test notices with optional Portal announcements.",
   "author": {
     "name": "Skill Forge"
   },

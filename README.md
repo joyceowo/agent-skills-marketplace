@@ -10,7 +10,7 @@ GitHub 儲存庫：[joyceowo/skill-forge](https://github.com/joyceowo/skill-forg
 | --- | --- | --- |
 | [sync-business-logic-docs](plugins/sync-business-logic-docs/README.md) | 1.1.0 | 從 C# 與 Git 歷史建立、稽核及增量同步業務邏輯 Markdown 文件。 |
 | [code-atlas](plugins/code-atlas/README.md) | 1.0.0 | 將單一或多個 Git 專案整理成三層商業地圖、鎮民規則文件與可匯入的地圖 ZIP。 |
-| [b2c-platform-tools](plugins/b2c-platform-tools/README.md) | 0.5.27 | 直接讀碼診斷系統問題，維護專案範圍與 Notion 位置；包含診斷與系統維護兩個 Skill。 另提供上線與測試通知及 Portal 公告流程。 |
+| [b2c-platform-tools](plugins/b2c-platform-tools/README.md) | 0.5.27 | 診斷問題、更新工作卡；系統知識維護僅在使用者明確要求時執行，不需預先登記系統。 另提供上線與測試通知及 Portal 公告流程。 |
 
 ## 平台支援
 
@@ -20,7 +20,7 @@ GitHub 儲存庫：[joyceowo/skill-forge](https://github.com/joyceowo/skill-forg
 | Claude Code | `.claude-plugin/marketplace.json` | 共用相同的 `skills/`，以 `/外掛名稱:技能名稱` 呼叫。 |
 | Claude 網頁版／一般聊天 | 手動上傳單一技能 ZIP | 將 `skills/<技能名稱>/` 資料夾連同內容壓成 ZIP，再依 [Claude Skills 說明](https://support.claude.com/en/articles/12512180-use-skills-in-claude) 上傳；不使用以下 Claude Code CLI 指令。 |
 
-各外掛的執行需求見其說明。B2C Platform Tools 的一般程式分析使用通用檔案工具，可選分析範圍檢查需要 PowerShell 7，不要求外部設定目錄，Notion 紀錄需要執行環境已連接可用的 Notion 工具與接收者自己的目的地。文件同步與 Code Atlas 使用檔案／Git 操作，`agents/openai.yaml` 提供 Codex 的顯示資訊與預設提示，核心流程位於共用的 `SKILL.md`。Claude 網頁版執行此技能仍需要提供原始碼與可存取的 Git 歷史；僅上傳 Skill 不會取得本機專案，因此程式碼同步工作建議使用 Claude Code。
+各外掛的執行需求見其說明。B2C Platform Tools 的一般程式分析使用通用檔案工具，可選範圍檢查需要 PowerShell 7，Notion 紀錄需要執行環境已連接可用的 Notion 工具與接收者自己的目的地。文件同步與 Code Atlas 使用檔案／Git 操作，`agents/openai.yaml` 提供 Codex 的顯示資訊與預設提示，核心流程位於共用的 `SKILL.md`。Claude 網頁版執行此技能仍需要提供原始碼與可存取的 Git 歷史；僅上傳 Skill 不會取得本機專案，因此程式碼同步工作建議使用 Claude Code。
 
 ## Code Atlas 安裝與使用
 
