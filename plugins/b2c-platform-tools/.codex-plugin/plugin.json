@@ -1,7 +1,7 @@
 {
   "name": "b2c-platform-tools",
-  "version": "0.5.3",
-  "description": "Diagnose system issues with Notion context and optional analyzed scopes; no external configuration required.",
+  "version": "0.5.11",
+  "description": "Diagnose system issues with Notion context and optional analyzed scopes; no external configuration required. Create B2C release and test notices with optional Portal announcements.",
   "author": {
     "name": "Skill Forge"
   },
@@ -12,12 +12,13 @@
     "diagnosis",
     "source-code",
     "system-maintenance",
-    "notion"
+    "notion",
+    "release-notice"
   ],
   "interface": {
     "displayName": "B2C Platform Tools",
-    "shortDescription": "系統問題診斷與分析範圍維護",
-    "longDescription": "辨識系統、查 Notion、核對程式並依授權解決；Portal 直接使用既有工作看板，其他系統確認使用既有 Notion 或提供其他連結。不要求系統登記或外部設定目錄；工具僅核對當次分析範圍。",
+    "shortDescription": "B2C 系統診斷與上線／測試通知",
+    "longDescription": "辨識系統、查 Notion、核對程式並依授權解決；Portal 直接使用既有工作看板，其他系統確認使用既有 Notion 或提供其他連結。不要求系統登記或外部設定目錄；工具僅核對當次分析範圍。 支援 B2C 上線與測試通知，以及依授權建立 Portal 公告。",
     "developerName": "Skill Forge",
     "websiteURL": "https://github.com/joyceowo/skill-forge",
     "category": "Productivity",
@@ -27,7 +28,8 @@
     ],
     "defaultPrompt": [
       "使用 b2c-issue-diagnosis，辨識這個問題的系統，先查 Notion，再核對程式並協助解決。",
-      "使用 b2c-system-maintenance，維護目前工作區的系統範圍與 Notion 位置。"
+      "使用 b2c-system-maintenance，維護目前工作區的系統範圍與 Notion 位置。",
+      "使用 b2c-release-test-notice 製作上線通知，並依需要建立附有 Document.pdf 的 Portal 公告。"
     ]
   }
 }

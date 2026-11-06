@@ -20,7 +20,7 @@
     {
       "name": "b2c-platform-tools",
       "source": "./plugins/b2c-platform-tools",
-      "description": "Diagnose system issues from source code and maintain project scopes and Notion destinations."
+      "description": "Diagnose B2C system issues and generate release or test notices with optional Portal announcements."
     }
   ]
 }

@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>@@TITLE@@</title></head>
+<body bgcolor="#FFFFFF" style="margin:0;padding:24px 12px;background-color:#FFFFFF;color:#333333;font-family:'Microsoft JhengHei',Arial,sans-serif;font-size:12pt;">
+
+<style>
+  .notice-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; max-width: 860px; margin: 0 0 18px; }
+  .notice-toolbar button { border: 1px solid #087d95; border-radius: 6px; padding: 8px 14px; font: inherit; font-weight: 600; cursor: pointer; background: #087d95; color: #fff; }
+  .notice-toolbar button + button { background: #fff; color: #087d95; }
+  .notice-toolbar button:hover { background: #066579; color: #fff; }
+  .notice-toolbar button:focus-visible { outline: 2px solid #087d95; outline-offset: 3px; }
+  #notice-status { font-size: 14px; }
+</style>
+<div class="notice-toolbar" role="group" aria-label="通知操作">
+  <button type="button" id="copy-notice">複製郵件內容</button>
+  <button type="button" id="download-pdf">產生 PDF</button>
+  <span style="color:#52646b;font-size:14px;">B2C 通知</span>
+  <span id="notice-status" role="status"></span>
+</div>
+<main id="release-notice" style="max-width:860px;margin:0;text-align:left;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#FFFFFF" style="width:100%;margin:0;border-collapse:collapse;background-color:#FFFFFF;mso-table-lspace:0pt;mso-table-rspace:0pt;">
+@@ROWS@@
+</table></main>
+<script type="application/octet-stream" id="notice-pdf">@@PDF@@</script>
+
+<script>
+  const notice = document.getElementById('release-notice');
+  const status = document.getElementById('notice-status');
+
+  document.getElementById('copy-notice').addEventListener('click', async () => {
+    const richText = notice.innerHTML.trim();
+    const title = notice.querySelector('h1 img').alt;
+    const plainText = `${title}
+
+${notice.innerText.trim()}`;
+    const selection = window.getSelection();
+    const range = document.createRange();
+    range.selectNodeContents(notice);
+    selection.removeAllRanges();
+    selection.addRange(range);
+
+    let wroteFormats = false;
+    function writeFormats(event) {
+      if (!event.clipboardData) return;
+      event.clipboardData.setData('text/html', richText);
+      event.clipboardData.setData('text/plain', plainText);
+      event.preventDefault();
+      wroteFormats = true;
+    }
+
+    document.addEventListener('copy', writeFormats);
+    try {
+      if (document.execCommand('copy') && wroteFormats) {
+        selection.removeAllRanges();
+        status.textContent = '已複製郵件內容。請選「保留來源格式」貼上。';
+        return;
+      }
+    } catch { /* Try the asynchronous Clipboard API below. */ }
+    finally { document.removeEventListener('copy', writeFormats); }
+
+    try {
+      await navigator.clipboard.write([new ClipboardItem({
+        'text/html': new Blob([richText], {type: 'text/html'}),
+        'text/plain': new Blob([plainText], {type: 'text/plain'})
+      })]);
+      selection.removeAllRanges();
+      status.textContent = '已複製郵件內容。請選「保留來源格式」貼上。';
+    } catch {
+      status.textContent = '已選取通知，請按 Ctrl+C 複製。';
+    }
+  });
+
+  document.getElementById('download-pdf').addEventListener('click', () => {
+    const encoded = document.getElementById('notice-pdf').textContent.trim();
+    const bytes = Uint8Array.from(atob(encoded), char => char.charCodeAt(0));
+    const url = URL.createObjectURL(new Blob([bytes], {type: 'application/pdf'}));
+    const download = document.createElement('a');
+    download.href = url;
+    download.download = 'Document.pdf';
+    document.body.append(download);
+    download.click();
+    download.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    status.textContent = '已開始下載 Document.pdf。';
+  });
+</script>
+</body></html>
