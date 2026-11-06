@@ -34,7 +34,10 @@ FONT_STYLE = (
     f"mso-ascii-font-family:'{MAIL_FONT}';mso-hansi-font-family:'{MAIL_FONT}';"
     f"mso-fareast-font-family:'{MAIL_FONT}';"
 )
-LABELS = {'release': '上線通知', 'test': '測試通知'}
+LABELS = {
+    'zh-Hant': {'release': '上線通知', 'test': '測試通知'},
+    'en': {'release': 'Release Notice', 'test': 'Test Notice'},
+}
 TEXT_KINDS = {'heading', 'paragraph', 'bullet', 'emphasis'}
 
 
@@ -49,10 +52,15 @@ def read_notice(path):
     data = json.loads(path.read_text(encoding='utf-8-sig'))
     if not isinstance(data, dict) or data.get('type') not in ('release', 'test'):
         raise ValueError('type must be release or test')
-    label = LABELS[data['type']]
-    title = required_text(data, 'title')
-    if not title.endswith(label):
-        title = f'{title} {label}'
+    language = data.get('language', 'zh-Hant')
+    if language not in ('zh-Hant', 'en', 'bilingual'):
+        raise ValueError('language must be zh-Hant, en or bilingual')
+    title_fields = [('zh-Hant', 'title'), ('en', 'title_en')] if language == 'bilingual' else [(language, 'title')]
+    titles = []
+    for title_language, field in title_fields:
+        label = LABELS[title_language][data['type']]
+        title = required_text(data, field)
+        titles.append(title if title.casefold().endswith(label.casefold()) else f'{title} {label}')
     highlight = data.get('highlight', '')
     if not isinstance(highlight, str):
         raise ValueError('highlight must be text')
@@ -79,7 +87,7 @@ def read_notice(path):
                 blocks.append({'kind': 'caption', 'text': required_text(entry, 'caption')})
         else:
             raise ValueError(f'Unknown block kind: {kind}')
-    return title, highlight.strip(), blocks
+    return '\n'.join(titles), highlight.strip(), blocks, 'mul' if language == 'bilingual' else language
 
 
 def title_image(title, font_path, bell):
@@ -155,7 +163,7 @@ def html_rows(title, highlight, blocks, brand, title_png):
 
         def run(text, ink=color):
             value = escape(text).replace('\n', '<br>')
-            return (f'<font face="{MAIL_FONT}" color="{ink}" lang="zh-TW" '
+            return (f'<font face="{MAIL_FONT}" color="{ink}" '
                     f'style="{FONT_STYLE}font-size:{size}pt;color:{ink};">{value}</font>')
 
         value = marked_text(block_text(block), highlight, run)
@@ -299,14 +307,14 @@ def main():
     if not args.font.is_file() or not args.bold_font.is_file():
         parser.error('Specify installed Traditional Chinese TrueType fonts with --font and --bold-font')
     try:
-        title, highlight, blocks = read_notice(args.input)
+        title, highlight, blocks, language = read_notice(args.input)
         brand = {name: (ASSETS/f'brand-{name}.png').read_bytes() for name in ('header', 'divider', 'footer')}
         title_png = title_image(title, args.bold_font, (ASSETS/'bell.png').read_bytes())
         pdf = render_pdf(title, highlight, blocks, brand, args.font, args.bold_font)
-        tokens = {'TITLE': escape(title), 'ROWS': html_rows(title, highlight, blocks, brand, title_png),
+        tokens = {'LANG': language, 'TITLE': escape(title), 'ROWS': html_rows(title, highlight, blocks, brand, title_png),
                   'PDF': base64.b64encode(pdf).decode('ascii')}
         template = (ASSETS/'notice-template.html').read_text(encoding='utf-8')
-        document = re.sub(r'@@(TITLE|ROWS|PDF)@@', lambda match: tokens[match[1]], template)
+        document = re.sub(r'@@(LANG|TITLE|ROWS|PDF)@@', lambda match: tokens[match[1]], template)
         pages = verify(document, title, blocks)
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(document, encoding='utf-8')
