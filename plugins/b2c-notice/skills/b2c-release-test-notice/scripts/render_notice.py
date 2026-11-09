@@ -24,6 +24,7 @@ from reportlab.platypus import KeepTogether, Paragraph, SimpleDocTemplate, Space
 
 ASSETS = Path(__file__).resolve().parents[1] / 'assets'
 MAIL_WIDTH = 860
+MAX_IMAGE_WIDTH = MAIL_WIDTH * 2
 BLUE = '#00ACCA'
 RED = '#E53935'
 GRAY = '#66747B'
@@ -102,6 +103,10 @@ def read_notice(path):
                 if original.format not in {'PNG', 'JPEG'}:
                     raise ValueError(f'Expected a PNG or JPEG screenshot: {source}')
                 screenshot = ImageOps.exif_transpose(original).convert('RGB')
+                if screenshot.width > MAX_IMAGE_WIDTH:
+                    # Keep 2x detail for the 860px mail column without embedding oversized files twice.
+                    height = round(screenshot.height * MAX_IMAGE_WIDTH / screenshot.width)
+                    screenshot = screenshot.resize((MAX_IMAGE_WIDTH, height), Image.LANCZOS)
                 png = BytesIO()
                 screenshot.save(png, format='PNG')
             blocks.append({'kind': kind, 'png': png.getvalue(), 'alt': required_text(entry, 'alt')})

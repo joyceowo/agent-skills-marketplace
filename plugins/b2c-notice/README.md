@@ -38,3 +38,5 @@ claude --plugin-dir ./plugins/b2c-notice
 ## 執行需求
 
 HTML 產生器需要 Python、Pillow、ReportLab、pypdf 及支援通知語言的字型。讀取 Notion 頁面需要 Notion 連線，登入截圖或建立 Portal 公告時需有對應站點的存取權。完整流程見 [技能說明](skills/b2c-release-test-notice/SKILL.md)。
+
+操作圖以每 1 CSS px 至少 2 個像素擷取。瀏覽器截圖工具會縮小畫面時（例如 Claude 桌面版內部瀏覽器輸出 800 px），技能改以放大分塊方式擷取並拼接，再用 `scripts/annotate_screenshot.py` 繪製抗鋸齒標註。Codex 與 Claude 依同一份規則與腳本執行，細節見 [高解析度截圖](skills/b2c-release-test-notice/references/screenshot-capture.md)。
