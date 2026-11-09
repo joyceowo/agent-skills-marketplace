@@ -1,6 +1,6 @@
 {
   "name": "b2c-notice",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Create B2C release and test notices with optional Portal announcements for releases.",
   "author": {
     "name": "Skill Forge"
