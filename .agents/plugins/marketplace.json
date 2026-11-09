@@ -41,10 +41,10 @@
       "category": "Productivity"
     },
     {
-      "name": "b2c-release-test-notice",
+      "name": "b2c-notice",
       "source": {
         "source": "local",
-        "path": "./plugins/b2c-release-test-notice"
+        "path": "./plugins/b2c-notice"
       },
       "policy": {
         "installation": "AVAILABLE",

@@ -1,5 +1,5 @@
 {
-  "name": "b2c-release-test-notice",
+  "name": "b2c-notice",
   "version": "1.0.0",
   "description": "Create B2C release and test notices with optional Portal announcements for releases.",
   "author": {
@@ -7,7 +7,7 @@
   },
   "skills": "./skills/",
   "repository": "https://github.com/joyceowo/skill-forge",
-  "homepage": "https://github.com/joyceowo/skill-forge/tree/main/plugins/b2c-release-test-notice",
+  "homepage": "https://github.com/joyceowo/skill-forge/tree/main/plugins/b2c-notice",
   "keywords": [
     "release-notice",
     "test-notice",

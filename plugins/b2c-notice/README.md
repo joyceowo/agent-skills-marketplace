@@ -9,14 +9,16 @@
 ```powershell
 # Codex
 codex plugin marketplace upgrade skill-forge
-codex plugin add b2c-release-test-notice@skill-forge
+codex plugin add b2c-notice@skill-forge
 
 # Claude Code
 claude plugin marketplace update skill-forge
-claude plugin install b2c-release-test-notice@skill-forge
+claude plugin install b2c-notice@skill-forge
 ```
 
-安裝後開啟新工作階段。在 Codex 可輸入「使用 b2c-release-test-notice，根據以下內容製作測試通知」。Claude Code 可用 `/b2c-release-test-notice:b2c-release-test-notice`。
+安裝後開啟新工作階段。在 Codex 可輸入「使用 b2c-release-test-notice，根據以下內容製作測試通知」。Claude Code 可用 `/b2c-notice:b2c-release-test-notice`。
+
+先前安裝 `b2c-release-test-notice@skill-forge` 的使用者，請依上方指令安裝新識別碼 `b2c-notice@skill-forge`。市集更新後，舊外掛如仍列在已安裝清單，可從該清單移除。
 
 原先透過 `b2c-platform-tools` 使用通知的使用者，可在安裝此外掛後，將原外掛更新至 0.6.0。兩個外掛可分別安裝。
 
@@ -26,9 +28,9 @@ claude plugin install b2c-release-test-notice@skill-forge
 
 ```powershell
 codex plugin marketplace add (Get-Location).Path
-codex plugin add b2c-release-test-notice@skill-forge
+codex plugin add b2c-notice@skill-forge
 
-claude --plugin-dir ./plugins/b2c-release-test-notice
+claude --plugin-dir ./plugins/b2c-notice
 ```
 
 ## 執行需求
