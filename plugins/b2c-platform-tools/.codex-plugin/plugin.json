@@ -1,6 +1,6 @@
 {
   "name": "b2c-platform-tools",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Diagnose B2C system issues, update work cards, and maintain system knowledge on request.",
   "author": {
     "name": "Skill Forge"
@@ -17,7 +17,7 @@
   "interface": {
     "displayName": "B2C Platform Tools",
     "shortDescription": "B2C 系統診斷與知識維護",
-    "longDescription": "辨識系統、查 Notion、核對程式、解決與驗證，再更新工作卡。系統知識維護依使用者要求執行。",
+    "longDescription": "辨識系統、查 Notion、核對程式，確認正式／測試環境後唯讀查 DB 與 Storage log，解決與驗證並更新工作卡。系統知識維護依使用者要求執行。",
     "developerName": "Skill Forge",
     "websiteURL": "https://github.com/joyceowo/skill-forge",
     "category": "Productivity",

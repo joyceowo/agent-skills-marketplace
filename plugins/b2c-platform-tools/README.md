@@ -4,7 +4,7 @@
 
 | Skill | 用途 |
 | --- | --- |
-| [b2c-issue-diagnosis](skills/b2c-issue-diagnosis/SKILL.md) | 辨識目標、查同案與規格、核對程式，依授權解決並更新工作卡。 |
+| [b2c-issue-diagnosis](skills/b2c-issue-diagnosis/SKILL.md) | 辨識目標、查同案與規格、核對程式，確認環境後唯讀查 DB／Storage log，依授權解決並更新工作卡。 |
 | [b2c-system-maintenance](skills/b2c-system-maintenance/SKILL.md) 系統知識維護 | 保存業務規則、流程、資料關係與設計原因，標示知識依據；僅在使用者明確要求時執行。 |
 
 上線／測試通知請單獨安裝 [B2C 上線／測試通知](../b2c-notice/README.md)。
@@ -13,9 +13,11 @@
 
 Notion 先以同系統、標題關鍵字與未完成狀態找候選，只列標題、狀態與連結；由使用者確認接續哪張或另開新案後，才讀取選定卡片的明細、規格與驗收並更新。已確認卡片不重問，已完成項目僅在使用者明確指定或要求追查時讀取。查無紀錄或工具不可用不阻擋證據足夠的工作，Portal 直接使用既有看板，非 Portal 尚無目的地決定時才詢問使用既有 Notion 或提供其他連結。一般背景問答不必建卡。
 
-修改業務程式沿用使用者的開發／修復授權，共用元件先分析影響。業務程式、測試及 SQL 留目標 repository；通用技能與隨附參考留此外掛；需求、修改與驗收集中在工作卡。可選範圍檢查需 PowerShell 7，格式見 [範圍契約](skills/b2c-system-maintenance/references/configuration.md)，無系統清單或啟用程序。不自動部署、執行 SQL 或傳送訊息。
+修改業務程式沿用使用者的開發／修復授權，共用元件先分析影響。業務程式、測試及 SQL 留目標 repository；通用技能與隨附參考留此外掛；需求、修改與驗收集中在工作卡。可選範圍檢查需 PowerShell 7，格式見 [範圍契約](skills/b2c-system-maintenance/references/configuration.md)，無系統清單或啟用程序。不自動部署、寫入 DB 或傳送訊息。
 
-資訊釐清僅在系統不明、相似工作卡尚待使用者確認，或非 Portal 需要記錄且目的地尚未經使用者確認時使用宿主提問卡片；已有答案不重問，必要答案送出前不進行依賴該答案的修改，預選不視為確認。規則見診斷 Skill。
+需要現場證據時，先確認「正式機／測試機」以及必要查詢範圍與登入方式，再用實際可用的工具自動唯讀查 DB 與 Storage log；DB 與 Storage 的環境分別確認，同環境可合併一次詢問。登入優先用既有 SSO；需保存帳密時，使用公司密鑰庫或本機加密保管庫，設定只保留憑證參照，正式／測試與 DB／Storage 分開。操作與保存範例見 [DB 與 Storage log 查詢](skills/b2c-issue-diagnosis/references/data-log-access.md)。本版提供查詢流程，實際連線仍需相應工具、端點與權限。
+
+資訊釐清在系統不明、相似工作卡尚待使用者確認、非 Portal 需要記錄且目的地尚未確認，或 DB／Storage 查詢缺少必要環境／存取資訊時使用宿主提問卡片；已有答案不重問，必要答案送出前不進行依賴該答案的修改或查詢，預選不視為確認。規則見診斷 Skill。
 
 診斷不自動建立或維護系統知識頁，也不在工作卡加入系統知識頁導覽。獨立的系統知識維護 Skill 僅在使用者明確要求時執行。
 

@@ -1,6 +1,6 @@
 {
   "name": "b2c-platform-tools",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Diagnose B2C system issues, update work cards, and maintain system knowledge on request.",
   "author": {
     "name": "Skill Forge"
