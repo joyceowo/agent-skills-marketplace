@@ -1,6 +1,6 @@
 # DB 與 Storage log 查詢
 
-需要現場資料或錯誤訊息時讀本文件。這是診斷的唯讀取證流程，不要求先登記系統、建立設定檔、安裝指定工具或改寫既有驗證方式；不預設 DB 引擎或 Storage 供應商。只有更新本 Skill 不代表已取得任何現場系統的查詢授權或登入資訊。
+需要現場資料或錯誤訊息時讀本文件。這是診斷的唯讀取證流程，不要求先登記系統、建立設定檔或改寫既有驗證方式；不預設 DB 引擎或 Storage 供應商。需要本機帳密時使用下述 `keyring` 工具；SSO／公司密鑰庫仍可沿用。只有更新本 Skill 不代表已取得任何現場系統的查詢授權或登入資訊。
 
 ## 先確認環境與存取範圍
 
@@ -12,39 +12,80 @@
 
 ## 登入資訊怎麼保存
 
-依既有公司規範選擇；環境、DB 與 Storage 使用各自的登入身分或憑證名稱，不以一個共用高權限帳密涵蓋所有資源。
+沿用公司既有 SSO／整合登入或密鑰庫；使用者選擇本機保存帳密時，透過 Python `keyring` 統一使用 Windows 憑證管理員與 macOS Keychain。環境、DB 與 Storage 使用各自的登入身分，不以一個共用高權限帳密涵蓋所有資源。
 
 | 情境 | 建議方式 | Skill／連線設定保留什麼 |
 | --- | --- | --- |
 | 公司已有 SSO、Windows 整合登入或雲端身分 | 優先沿用目前使用者的合法登入；服務端自動化可用既有受管理身分。僅授予必要的 DB 查詢與 log 讀取權限。 | 登入方式與環境對應；不用另存登入密碼。 |
 | 團隊共用或正式環境必須使用秘密 | 用公司既有密鑰庫，例如已採用 Azure 時的 Key Vault；依身分控管讀取、到期與輪替。 | Vault／secret 名稱或參照；端點與資源名稱與秘密分開。 |
-| 單人 Windows 本機必須保存帳密 | 用公司允許的加密保管庫；PowerShell 既有流程可採 SecretManagement 搭配 SecretStore，保留密碼解鎖保護。 | 保管庫名稱及如 `b2c-portal-test-db-readonly` 的憑證名稱。 |
+| Windows／macOS 本機帳密 | 使用本 Skill 的 `credentials.py`；固定選擇 `keyring` 的 Windows／macOS 原生後端，不使用其他後端或明文退回方案。 | service 名稱與固定紀錄鍵 `connection`；帳號與密碼一起放進系統保管庫的秘密內容。 |
 | Storage 僅能用 token／SAS | 優先短效、最小範圍的唯讀 token；存入同一類保管庫，依需要允許指定 prefix／容器的讀取與列舉。 | 憑證參照、到期資訊及不含簽章的資源路徑。 |
 
-Azure Storage 若適用，優先 Microsoft Entra ID；保管秘密使用 Key Vault，不把 Storage 當成密碼保管庫。參考 [Microsoft 的 Storage 安全建議](https://learn.microsoft.com/en-us/azure/storage/common/secure-storage)。SecretManagement／SecretStore 已進入功能完成狀態，仍提供安全與重大錯誤修正；公司已有身分或密鑰庫時優先沿用，見 [官方概觀](https://learn.microsoft.com/en-us/powershell/utility-modules/secretmanagement/overview?view=ps-modules)。
+Azure Storage 若適用，優先 Microsoft Entra ID；保管秘密可用公司既有 Key Vault，不把 Storage 當成密碼保管庫。參考 [Microsoft 的 Storage 安全建議](https://learn.microsoft.com/en-us/azure/storage/common/secure-storage)。
 
-### 本機保存帳密的操作範例
+### 四筆本機憑證
 
-下例供使用者在自己的 PowerShell 7 中操作，不由診斷助手自動安裝模組或建立保管庫。前提是公司允許使用這些模組，且已安裝 SecretManagement 與 SecretStore。若已有公司保管庫，直接沿用其登入及儲存流程。
+| 環境／用途 | service 名稱 | 紀錄鍵 |
+| --- | --- | --- |
+| 測試 DB | `b2c/test/db` | `connection` |
+| 測試 Storage | `b2c/test/storage` | `connection` |
+| 正式 DB | `b2c/prod/db` | `connection` |
+| 正式 Storage | `b2c/prod/storage` | `connection` |
+
+上表定義四個可獨立使用的名稱，不要求安裝時建立或一次輸入四筆。每筆在實際需要時才建立，內容是系統保管庫中的一個秘密值，內含版本、登入類型、真實帳號與密碼／token 的 JSON；JSON 不另寫成明文檔。固定紀錄鍵 `connection` 不是真實登入帳號。DB 使用帳密；Storage 可選帳密或 token／SAS／key。不同系統不能默認共用這四筆，需另有明確命名及身分對應。
+
+Windows 的紀錄可在「憑證管理員 → Windows 認證 → 一般認證」管理；macOS 在「鑰匙圈存取」中查找對應 service。Windows 設為目前使用者在本機持久保存，不要求額外保管庫密碼；macOS 的讀取提示依 Keychain 存取控制。命名區隔不是權限隔離，也不保證每次讀取都會要求人確認；正式環境仍須先依本案流程確認。兩台電腦各自設定，不由工具同步憑證。
+
+### 安裝與安全輸入
+
+工具為 [credentials.py](../scripts/credentials.py)，Python 套件需求見 [requirements-keyring.txt](../scripts/requirements-keyring.txt)。本機依賴設定與帳密輸入分開：可在使用者要求設定時準備專用環境，但不立即要求填四筆。使用本 Skill 診斷且需要某筆登入資訊時，依下節先檢查、缺少才提醒與開啟單筆輸入；已有可用環境與憑證就沿用。不建立假憑證、不修改全域 `keyring` 設定或停用系統保護。
+
+使用 Python 3.10 以上建立專用環境，以下 `<Skill目錄>` 替換為實際技能目錄。Windows PowerShell：
 
 ```powershell
-# 僅首次設定、尚未註冊時執行；沿用 SecretStore 預設密碼保護。
-Register-SecretVault -Name B2CDiagnostics -ModuleName Microsoft.PowerShell.SecretStore
-
-# 帳密由本機互動提示輸入，不寫入指令、聊天或腳本。
-$b2cDbCredential = Get-Credential -Message '請輸入測試 DB 唯讀帳號與密碼'
-Set-Secret -Vault B2CDiagnostics -Name b2c-portal-test-db-readonly -Secret $b2cDbCredential -NoClobber
-Remove-Variable b2cDbCredential
-
-# Storage token 使用隱藏輸入；不在命令列貼真實 token。
-$b2cStorageToken = Read-Host '請輸入測試 Storage 唯讀 token' -AsSecureString
-Set-Secret -Vault B2CDiagnostics -Name b2c-portal-test-storage-readonly -Secret $b2cStorageToken -NoClobber
-Remove-Variable b2cStorageToken
+python -m venv "$env:USERPROFILE/.local/share/b2c-diagnostics/python"
+$b2cPython = "$env:USERPROFILE/.local/share/b2c-diagnostics/python/Scripts/python.exe"
+& $b2cPython -I -m pip --isolated install --index-url https://pypi.org/simple -r '<Skill目錄>/scripts/requirements-keyring.txt'
+& $b2cPython -I '<Skill目錄>/scripts/credentials.py' doctor
 ```
 
-`-NoClobber` 避免覆寫同名秘密；正式機另用 `prod` 名稱及對應身分，名稱區隔不取代資源權限。多個 SecretStore 註冊名稱仍指向同一使用者的儲存區，不是環境隔離，見 [SecretStore 管理](https://learn.microsoft.com/en-us/powershell/utility-modules/secretmanagement/how-to/manage-secretstore?view=ps-modules)。儲存型別與互動輸入見 [Set-Secret](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.secretmanagement/set-secret?view=ps-modules)。
+macOS Terminal：
 
-診斷時僅由連線程序取得本案指定的秘密並在記憶體使用，工具輸出不顯示帳密、token 或完整連線字串；不把 `Get-Secret` 結果直接回傳給模型或以 `-AsPlainText` 印到終端。不得把秘密放進 Skill、Notion、版本控制、明文 `.env`／JSON／SQL、命令列參數或記錄檔，也不以 Base64 當加密。保管庫未解鎖、SSO／MFA 到期時請使用者在安全登入介面完成；不要求把解鎖密碼貼到聊天，也不為自動化取消保護。沒有能安全消費秘密的工具時，提供唯讀查詢讓使用者執行，不能宣稱已連線。
+```bash
+python3 -m venv "$HOME/.local/share/b2c-diagnostics/python"
+"$HOME/.local/share/b2c-diagnostics/python/bin/python" -I -m pip --isolated install --index-url https://pypi.org/simple -r '<Skill目錄>/scripts/requirements-keyring.txt'
+"$HOME/.local/share/b2c-diagnostics/python/bin/python" -I '<Skill目錄>/scripts/credentials.py' doctor
+```
+
+`setup` 必須明確指定 `--environment test|prod --resource db|storage`，不接受無目標的整批設定。輸入在使用者可見、可互動的本機終端執行，不在工具捕捉的 stdin 或聊天接收帳密；密碼／token 隱藏輸入並二次確認，無法關閉回顯時停止。使用者可中止，不寫入空白佔位紀錄。已有紀錄不覆寫；需要更換時由使用者先在作業系統保管庫移除該筆，再設定。先前的 SecretStore 不自動讀取、遷移或刪除，先前安裝的 PowerShell 模組也不影響此工具。
+
+### 使用 Skill 時按需提醒與儲存
+
+1. 本次確實需要 DB／Storage 登入且未採 SSO／公司密鑰庫時，先沿用或詢問使用者確認正式／測試環境，再執行該筆的 `status --environment <test或prod> --resource <db或storage>`。只檢查本案所需項目，不掃描其他三筆；只讀碼即可回答時不觸發。
+2. 該筆 `present=true` 且 `valid=true` 時直接交由連線程序取用，不要求重新輸入。缺少時先提醒「本次需要測試機 DB 登入資訊，請在本機輸入並儲存」（環境／用途依本案替換），再執行同一筆的 `prompt`。這是在已確認本案查詢用途內準備所需登入，不增加第二次查詢授權問題。
+3. `prompt --environment <test或prod> --resource <db或storage>` 在 Windows 開啟獨立主控台，在 macOS 開啟 Terminal，均由使用者親自輸入；只回傳非秘密進度檔位置。自動開啟受宿主限制時，提供相同目標的 `setup` 指令讓使用者在本機終端執行，不請其貼帳密。
+4. 等待本機儲存完成後，再檢查該筆狀態並接續查詢；未輸入、關閉視窗、取消或失敗時暫停依賴該憑證的連線，繼續可獨立完成的工作。不自行改查另一環境，不在等待期間重複開視窗，也不補問其他三筆。
+
+例如本次已確認需要測試 DB，Windows 的按需操作為：
+
+```powershell
+& $b2cPython -I '<Skill目錄>/scripts/credentials.py' status --environment test --resource db
+# 只有缺少時，先提醒使用者，再開啟本機單筆輸入。
+& $b2cPython -I '<Skill目錄>/scripts/credentials.py' prompt --environment test --resource db
+```
+
+macOS 使用上方專用 Python 路徑執行相同參數。安裝本機依賴不代表已存帳密；某筆已儲存也不代表其他三筆已完成，分別回報本次實際狀態。
+
+### 診斷取用與驗證
+
+- `doctor` 只顯示平台、原生後端與套件版本；`status` 必須指定環境／用途，只顯示該 service 的 `present`／`valid`；`valid` 只代表紀錄格式可供程式取用，不代表遠端登入已成功。存後讀回核對及狀態檢查在程序記憶體內完成，不把紀錄內容送給模型。不要執行會把秘密印到終端的 `keyring get`。
+- 單筆輸入可指定 `setup ... --progress-file <本機路徑>`；`prompt` 預設在使用者的 `.local/share/b2c-diagnostics/` 使用依環境／用途分開的進度檔。檔案只記錄狀態與 service，供助手追蹤，不含帳號、秘密或原始錯誤。只在本次目標 valid 時才說該筆設定完成，其他筆不構成查詢前提。
+- 真正 DB／Storage 連線程序可匯入 `credentials.py`，在環境與用途確認後呼叫 `load_credential('test', 'db')` 等取得 `Credential`（`auth_type`、`username`、`secret`）。在同一程序直接交給驅動／SDK，不先由 shell 輸出再貼給另一工具。API 不執行連線，也不替代查詢授權。
+- 不提供印出秘密的 CLI。錯誤只回報安全代碼或例外類型，不輸出原始訊息、traceback 或輸入值。缺依賴、原生保管庫不可用、鎖定／拒絕存取時停止，不改用明文或其他後端。
+
+後端支援與存取限制見 [keyring 官方文件](https://keyring.readthedocs.io/en/latest/)。Windows 使用 `WinVaultKeyring`，macOS 使用 `macOS.Keyring`；平台選擇以程式內明確指定，不沿用可能指向其他外掛的自動後端設定。此工具不等同 Windows DPAPI 自訂加密檔案，也不以明文 `.env` 作備援。
+
+診斷時僅由連線程序取得本案指定的秘密並在記憶體使用，工具輸出不顯示帳密、token 或完整連線字串。不得把秘密放進 Skill、Notion、版本控制、明文 `.env`／JSON／SQL、命令列參數或記錄檔，也不以 Base64 當加密。保管庫未解鎖、SSO／MFA 到期時請使用者在安全登入介面完成；不要求把解鎖密碼貼到聊天，也不為自動化取消保護。沒有能安全消費秘密的工具時，提供唯讀查詢讓使用者執行，不能宣稱已連線。
 
 ## DB：確認資料與程式判斷
 
