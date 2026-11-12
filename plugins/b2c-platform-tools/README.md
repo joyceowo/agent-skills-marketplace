@@ -1,30 +1,17 @@
 # B2C Platform Tools
 
-使用者提出問題／需求後，依「辨識系統 → 查 Notion → 核對程式 → 解決與驗證 → 更新 Notion」處理。支援 Codex 與 Claude Code。
+支援 Codex 與 Claude Code；兩端共用同一份技能來源。
 
 | Skill | 用途 |
 | --- | --- |
-| [b2c-issue-diagnosis](skills/b2c-issue-diagnosis/SKILL.md) | 辨識目標、查同案與規格、核對程式，確認環境後唯讀查 DB／Storage log，依授權解決並更新工作卡。 |
-| [b2c-system-maintenance](skills/b2c-system-maintenance/SKILL.md) 系統知識維護 | 保存業務規則、流程、資料關係與設計原因，標示知識依據；僅在使用者明確要求時執行。 |
+| [b2c-issue-diagnosis](skills/b2c-issue-diagnosis/SKILL.md) | 辨識系統、查 Notion、核對程式，按需唯讀查 DB／Storage，依授權修復並更新同張工作卡。 |
+| [b2c-system-maintenance](skills/b2c-system-maintenance/SKILL.md) | 使用者明確要求時，整理可重用系統知識與依據。 |
 
-上線／測試通知請單獨安裝 [B2C 上線／測試通知](../b2c-notice/README.md)。
+診斷依 KISS、DRY、YAGNI 按需工作，不要求系統登記或外部設定檔。聊天只摘要與連結；完整 SQL 與驗收只放同張 Notion 工作卡，文字重點使用原生顏色，相關圖片直接標註並放在說明旁，不預設遮碼個人資訊。
 
-SQL 撰寫遵循 KISS、DRY、YAGNI：語句簡單清楚、避免重複、只處理本次必要範圍，保留必要的更新條件與驗證，直接交付於同一 Notion 工作卡。
+- [Notion 工作追蹤](skills/b2c-issue-diagnosis/references/notion-workflow.md)：卡片確認、結構、色彩、圖片及人工驗收。
+- [程式診斷與交付收尾](skills/b2c-issue-diagnosis/references/repository-workflow.md)：修改範圍、驗證、分支與 Commit。
+- [資料存取](skills/b2c-issue-diagnosis/references/data-log-access.md)：先確認環境與範圍；本機帳密按需存 OS keyring，等待輸入完成才續查，不輸出秘密。
+- [交付與 SQL](skills/b2c-issue-diagnosis/references/response-template.md)：SQL 優先與簡潔交付，不預設建立個案檔案。
 
-不需先建立／登記系統，不要求外部設定目錄。Skill 先使用對話、畫面、API 與工作區線索辨識，仍無法確定才詢問；未收錄系統照常處理。[系統參考](skills/b2c-issue-diagnosis/references/systems/index.md) 只在相關時讀取。
-
-Notion 先以同系統、標題關鍵字與未完成狀態找候選，只列標題、狀態與連結；由使用者確認接續哪張或另開新案後，才讀取選定卡片的明細、規格與驗收並更新。已確認卡片不重問，已完成項目僅在使用者明確指定或要求追查時讀取。查無紀錄或工具不可用不阻擋證據足夠的工作，Portal 直接使用既有看板，非 Portal 尚無目的地決定時才詢問使用既有 Notion 或提供其他連結。一般背景問答不必建卡。
-
-修改業務程式沿用使用者的開發／修復授權，共用元件先分析影響。業務程式與測試留目標 repository；個案修正、查詢及驗證 SQL 直接放在同一 Notion 工作卡，不另產生 `.sql`、交付文件或目錄，只有使用者明確要求匯出時才另存。通用技能與隨附參考留此外掛；需求、修改與驗收集中在工作卡。可選範圍檢查需 PowerShell 7，格式見 [範圍契約](skills/b2c-system-maintenance/references/configuration.md)，無系統清單或啟用程序。不自動部署、寫入 DB 或傳送訊息。
-
-需要現場證據時，先確認「正式機／測試機」以及必要查詢範圍與登入方式，再用實際可用的工具自動唯讀查 DB 與 Storage log；DB 與 Storage 的環境分別確認，同環境可合併一次詢問。登入優先用既有 SSO／公司密鑰庫；本機帳密透過 Python `keyring` 存進 Windows 憑證管理員或 macOS Keychain，正式／測試的 DB、Storage 使用四個獨立名稱。使用 Skill 且本次確實需要登入時，才檢查該筆；缺少就提醒並開啟單筆本機輸入，儲存後接續查詢，已有的沿用。不要求安裝時一次填四筆。工具只回報設定狀態，連線程序透過 API 在記憶體取用，不印出帳密。安裝、命名與取用方式見 [DB 與 Storage log 查詢](skills/b2c-issue-diagnosis/references/data-log-access.md)。實際查詢仍需相應工具、端點與權限，本機儲存不代表已驗證登入成功。
-
-資訊釐清在系統不明、相似工作卡尚待使用者確認、非 Portal 需要記錄且目的地尚未確認，或 DB／Storage 查詢缺少必要環境／存取資訊時使用宿主提問卡片；已有答案不重問，必要答案送出前不進行依賴該答案的修改或查詢，預選不視為確認。規則見診斷 Skill。
-
-診斷不自動建立或維護系統知識頁，也不在工作卡加入系統知識頁導覽。獨立的系統知識維護 Skill 僅在使用者明確要求時執行。
-
-本機輸入視窗開啟後，以 `credentials.py wait` 追蹤本次進度與同筆憑證，儲存完成才接續查詢；等待中不將讀碼暫定結果當作診斷完成。聊天只保留簡短結論、實際處理狀態、必要的使用者動作與 Notion 連結；完整 SQL、查核與驗收細節留在同一工作卡，使用者要求展開或 Notion 無法同步時才在對話補充。工作卡只保留影響判斷、修改、執行與驗收的內容，省略連線資訊、精確查詢時間、無關關聯與完整取值鏈路。資料更新優先提供完整修正與驗證 SQL，不以管理畫面／儲存 API 代替；API 表格只列本次異動或實際驗收必須呼叫的 API。資料修正腳本可先準備供檢閱，實際寫入仍須明確授權。
-
-直接在原圖副本上標註，不拆成重點圖與原始圖，不加描述標註規則的圖說。同一項目使用的標註元素統一用色；框與文字有距離時，以互不交叉的同色箭頭連接。本案記錄授權與目的卡片確認後，相關圖片證據預設標註並上傳至同卡，不逐張再問同意；使用者要求不上傳時遵從。此規則不取消宿主的工具／安全審核，也不擴及其他目的地。
-
-Portal／PortalAPI／B2C Portal 所屬系統直接使用既有 Notion 工作看板，不另問位置；另開新案也沿用。非 Portal 需要記錄且尚無使用者目的地決定時，以提問卡片詢問「使用既有 Notion」或「提供其他 Notion 連結」；已有適用答案不重問。目的地解析見診斷 Skill 的 B2C 專屬參考。
+一般讀碼沒有額外工具前提；本機憑證工具需 Python 3.10 以上，可選範圍工具需 PowerShell 7。Notion 與現場查核需可用連接工具及對應權限。安裝、發布與更新兩端方式見 [市集說明](../../README.md)；上線／測試通知另用 [B2C Notice](../b2c-notice/README.md)。
