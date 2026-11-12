@@ -10,7 +10,7 @@ GitHub 儲存庫：[joyceowo/skill-forge](https://github.com/joyceowo/skill-forg
 | --- | --- | --- |
 | [sync-business-logic-docs](plugins/sync-business-logic-docs/README.md) | 1.1.0 | 從 C# 與 Git 歷史建立、稽核及增量同步業務邏輯 Markdown 文件。 |
 | [code-atlas](plugins/code-atlas/README.md) | 1.0.0 | 將單一或多個 Git 專案整理成三層商業地圖、鎮民規則文件與可匯入的地圖 ZIP。 |
-| [b2c-platform-tools](plugins/b2c-platform-tools/README.md) | 0.8.3 | 診斷問題、唯讀查 DB／Storage log、本機跨平台憑證儲存、更新工作卡，並依需求維護系統知識。 |
+| [b2c-platform-tools](plugins/b2c-platform-tools/README.md) | 0.8.4 | 診斷問題、唯讀查 DB／Storage log、本機跨平台憑證儲存、更新工作卡，並依需求維護系統知識。 |
 | [b2c-notice](plugins/b2c-notice/README.md) | 1.1.0 | 製作 B2C 上線與測試通知，並可依授權建立 Portal 上線公告。 |
 
 ## 平台支援
