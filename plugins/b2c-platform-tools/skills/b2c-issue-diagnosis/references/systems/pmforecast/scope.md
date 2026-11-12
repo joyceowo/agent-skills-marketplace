@@ -14,7 +14,7 @@
 | 請求／回應 | Model/PmForecastModel.cs |
 | 實體 | Entity/SD/PmForecast_ModelConfigs.cs、PmForecast_PartConfigs.cs、PmForecast_ModelForecasts.cs、PmForecast_PartForecasts.cs |
 
-本次需求涉及的上述專屬檔案可讀取；使用者要求開發／修復時，依實際影響修改必要檔案。新增測試或 SQL 放在業務 repository 的相應目錄；先檢查現有結構與風格。未列出的直接相依可依呼叫關係追查，不必先維護登記。
+本次需求涉及的上述專屬檔案可讀取；使用者要求開發／修復時，依實際影響修改必要檔案。新增業務測試放在 repository 的相應目錄，先核對現有結構與風格；個案修正、查詢與驗證 SQL 直接放同一 Notion 工作卡，不另產生檔案。未列出的直接相依可依呼叫關係追查，不必先維護登記。
 
 ## 共用元件
 
