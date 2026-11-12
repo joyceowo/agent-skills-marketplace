@@ -63,8 +63,9 @@ python3 -m venv "$HOME/.local/share/b2c-diagnostics/python"
 
 1. 本次確實需要 DB／Storage 登入且未採 SSO／公司密鑰庫時，先沿用或詢問使用者確認正式／測試環境，再執行該筆的 `status --environment <test或prod> --resource <db或storage>`。只檢查本案所需項目，不掃描其他三筆；只讀碼即可回答時不觸發。
 2. 該筆 `present=true` 且 `valid=true` 時直接交由連線程序取用，不要求重新輸入。缺少時先提醒「本次需要測試機 DB 登入資訊，請在本機輸入並儲存」（環境／用途依本案替換），再執行同一筆的 `prompt`。這是在已確認本案查詢用途內準備所需登入，不增加第二次查詢授權問題。
-3. `prompt --environment <test或prod> --resource <db或storage>` 在 Windows 開啟獨立主控台，在 macOS 開啟 Terminal，均由使用者親自輸入；只回傳非秘密進度檔位置。自動開啟受宿主限制時，提供相同目標的 `setup` 指令讓使用者在本機終端執行，不請其貼帳密。
-4. 等待本機儲存完成後，再檢查該筆狀態並接續查詢；未輸入、關閉視窗、取消或失敗時暫停依賴該憑證的連線，繼續可獨立完成的工作。不自行改查另一環境，不在等待期間重複開視窗，也不補問其他三筆。
+3. `prompt --environment <test或prod> --resource <db或storage>` 在 Windows 開啟獨立主控台，在 macOS 開啟 Terminal，均由使用者親自輸入；只回傳非秘密進度檔位置，每次預設產生獨立檔名，避免把前次進度當成本次完成。回傳 `state=starting`／程序 exit 0 只表示已啟動，不能接著連線或結束診斷。若回傳 `already_configured=true`，表示已有同筆有效紀錄，無須再等待輸入。自動開啟受宿主限制時，提供相同目標、含 `--progress-file` 的 `setup` 指令讓使用者在本機終端執行，不請其貼帳密。
+4. 開啟後對工具回傳的**本次進度檔原路徑**執行 `wait --environment <test或prod> --resource <db或storage> --progress-file <本次路徑> --seconds 5`。只有 `ready=true`／exit 0 才表示該筆進度為 `complete` 且保管庫紀錄有效；這仍不代表遠端登入成功。`starting`／`waiting_for_input`／exit 2 表示仍待輸入，接著對同一路徑再次 `wait`，不重開視窗。每次等待最多 30 秒，期間可做獨立工作，約每分鐘簡短說明仍在等待本機輸入；一次等待逾時不等於使用者取消或授權略過查核。
+5. 環境待答、輸入未完成及現場查核未完成時，不把讀碼暫定分析當成本案最終結果；保持原查核任務，成功後接續實際連線與查詢。`cancelled`（exit 130）／`failed`（exit 1）、目標不符或存取錯誤時停止該連線，說明阻礙及重試方式；關閉視窗但未更新進度時維持待輸入，若無法繼續追蹤，只交代待輸入狀態與同筆 `setup` 接續方式，不宣稱診斷／查核完成。使用者明確要求略過查核或只交付讀碼結果時，才依新範圍交付並標明限制。不自行改查另一環境，也不補問其他三筆。
 
 例如本次已確認需要測試 DB，Windows 的按需操作為：
 
@@ -72,6 +73,8 @@ python3 -m venv "$HOME/.local/share/b2c-diagnostics/python"
 & $b2cPython -I '<Skill目錄>/scripts/credentials.py' status --environment test --resource db
 # 只有缺少時，先提醒使用者，再開啟本機單筆輸入。
 & $b2cPython -I '<Skill目錄>/scripts/credentials.py' prompt --environment test --resource db
+# 使用 prompt 回傳的實際 progress_file；仍待輸入就對同檔再次 wait。
+& $b2cPython -I '<Skill目錄>/scripts/credentials.py' wait --environment test --resource db --progress-file '<本次回傳的進度檔路徑>' --seconds 5
 ```
 
 macOS 使用上方專用 Python 路徑執行相同參數。安裝本機依賴不代表已存帳密；某筆已儲存也不代表其他三筆已完成，分別回報本次實際狀態。
@@ -79,7 +82,7 @@ macOS 使用上方專用 Python 路徑執行相同參數。安裝本機依賴不
 ### 診斷取用與驗證
 
 - `doctor` 只顯示平台、原生後端與套件版本；`status` 必須指定環境／用途，只顯示該 service 的 `present`／`valid`；`valid` 只代表紀錄格式可供程式取用，不代表遠端登入已成功。存後讀回核對及狀態檢查在程序記憶體內完成，不把紀錄內容送給模型。不要執行會把秘密印到終端的 `keyring get`。
-- 單筆輸入可指定 `setup ... --progress-file <本機路徑>`；`prompt` 預設在使用者的 `.local/share/b2c-diagnostics/` 使用依環境／用途分開的進度檔。檔案只記錄狀態與 service，供助手追蹤，不含帳號、秘密或原始錯誤。只在本次目標 valid 時才說該筆設定完成，其他筆不構成查詢前提。
+- 單筆輸入可指定 `setup ... --progress-file <本機路徑>`；`prompt` 預設在使用者的 `.local/share/b2c-diagnostics/` 使用依環境／用途與本次啟動區分的進度檔。檔案只記錄狀態與 service，供助手追蹤，不含帳號、秘密或原始錯誤。`wait` 只檢查指定檔與同筆憑證，不讀其他三筆，也不自動登入；取消／失敗／進度目標不符不視為完成。只在本次進度完成且目標 valid 時才說該筆設定完成，其他筆不構成查詢前提。
 - 真正 DB／Storage 連線程序可匯入 `credentials.py`，在環境與用途確認後呼叫 `load_credential('test', 'db')` 等取得 `Credential`（`auth_type`、`username`、`secret`）。在同一程序直接交給驅動／SDK，不先由 shell 輸出再貼給另一工具。API 不執行連線，也不替代查詢授權。
 - 不提供印出秘密的 CLI。錯誤只回報安全代碼或例外類型，不輸出原始訊息、traceback 或輸入值。缺依賴、原生保管庫不可用、鎖定／拒絕存取時停止，不改用明文或其他後端。
 
@@ -104,4 +107,4 @@ macOS 使用上方專用 Python 路徑執行相同參數。安裝本機依賴不
 
 ## 證據與交付
 
-記錄實際環境與查詢時間、DB／Storage 的非秘密識別、SQL／搜尋條件、結果筆數或匹配 log 位置、必要片段及限制。區分「讀碼假說」「DB 查詢結果」「log 顯示」「已執行修復驗證」，依 [診斷回覆格式](response-template.md) 交付；同步到已確認的同一工作卡，不另建秘密清單，也不把找到例外訊息當作根因或修復已驗證。
+查核時核對實際環境、時間與時區、資源識別、SQL／搜尋條件、筆數／匹配 log 及限制，確保證據適用本案；不為展示流程額外製作稽核文件。回覆與同一工作卡依 [診斷回覆格式](response-template.md) 只保留影響根因判斷、修改範圍、執行或驗收的結果；不列無關區域／關聯筆數、共同欄位清單或完整取值鏈路。主機／資料庫名稱、精確查詢時間與時區補核預設省略，必要因果用一句話交代；只有環境／時間差異影響判斷或使用者明確要求時，才補對應細節。資料更新優先提供已核對的限定範圍修正 SQL 與驗證 SQL，不以管理畫面／儲存 API 代替；必要替代條件依交付格式。區分讀碼假說、現場結果與已執行修復，不把查詢成功或找到例外當成已修好。提供修正 SQL 不等於執行，實際資料寫入仍須明確授權。

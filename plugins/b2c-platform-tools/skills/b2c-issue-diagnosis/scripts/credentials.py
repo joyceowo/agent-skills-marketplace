@@ -12,6 +12,8 @@ import json
 import shlex
 import subprocess
 import sys
+import time
+import uuid
 import warnings
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -213,17 +215,53 @@ def prompt(environment: str, resource: str, progress_file: Path) -> None:
         raise CredentialError("unsupported_platform")
 
 
+def wait_for_setup(backend, environment: str, resource: str, progress_file: Path,
+                   seconds: int = 5) -> dict:
+    """Bounded polling: launching a prompt is never evidence of saved credentials."""
+    service = service_name(environment, resource)
+    deadline = time.monotonic() + seconds
+    while True:
+        try:
+            progress = json.loads(progress_file.read_text(encoding="utf-8"))
+        except (FileNotFoundError, json.JSONDecodeError):
+            # The terminal may still be starting or writing the progress file.
+            progress = {"state": "starting"}
+        if not isinstance(progress, dict):
+            raise CredentialError("invalid_progress")
+        state = progress.get("state")
+        if state not in ("starting", "waiting_for_input", "complete", "cancelled", "failed"):
+            raise CredentialError("invalid_progress")
+        saved = progress.get("services", [])
+        current = progress.get("current_service", "")
+        if not isinstance(saved, list) or any(item != service for item in saved) or current not in ("", service):
+            raise CredentialError("progress_target_mismatch")
+        result = {"service": service, "state": state, "ready": False}
+        if state == "complete":
+            if saved != [service]:
+                raise CredentialError("progress_target_mismatch")
+            if not status(backend, (service,))[0]["valid"]:
+                raise CredentialError("verification_failed")
+            result["ready"] = True
+            return result
+        if state in ("cancelled", "failed") or time.monotonic() >= deadline:
+            return result
+        time.sleep(min(1, max(0, deadline - time.monotonic())))
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description="B2C OS credential storage; no secret output")
-    parser.add_argument("action", choices=("doctor", "status", "setup", "prompt"))
+    parser.add_argument("action", choices=("doctor", "status", "setup", "prompt", "wait"))
     parser.add_argument("--environment", choices=ENVIRONMENTS)
     parser.add_argument("--resource", choices=RESOURCES)
     parser.add_argument("--progress-file", type=Path, help="Non-secret setup progress JSON")
+    parser.add_argument("--seconds", type=int, default=5, help="wait polling duration (1-30 seconds)")
     args = parser.parse_args(argv)
     if args.action != "doctor" and (args.environment is None or args.resource is None):
         parser.error("--environment and --resource are required; no default environment")
-    if args.progress_file is not None and args.action not in ("setup", "prompt"):
-        parser.error("--progress-file is only supported for setup or prompt")
+    if args.progress_file is not None and args.action not in ("setup", "prompt", "wait"):
+        parser.error("--progress-file is only supported for setup, prompt or wait")
+    if args.action == "wait" and (args.progress_file is None or not 1 <= args.seconds <= 30):
+        parser.error("wait requires --progress-file and --seconds between 1 and 30")
     try:
         backend = native_backend()
         if args.action == "doctor":
@@ -234,6 +272,12 @@ def main(argv=None) -> int:
         elif args.action == "status":
             service = service_name(args.environment, args.resource)
             print(json.dumps({"credentials": status(backend, (service,))}, ensure_ascii=False))
+        elif args.action == "wait":
+            result = wait_for_setup(backend, args.environment, args.resource, args.progress_file, args.seconds)
+            print(json.dumps(result))
+            if result["ready"]:
+                return 0
+            return {"cancelled": 130, "failed": 1}.get(result["state"], 2)
         elif args.action == "prompt":
             service = service_name(args.environment, args.resource)
             existing = status(backend, (service,))[0]
@@ -243,7 +287,7 @@ def main(argv=None) -> int:
                 print(json.dumps({"service": service, "already_configured": True}))
                 return 0
             progress_file = args.progress_file or (Path.home() / ".local/share/b2c-diagnostics" /
-                                                   f"setup-{args.environment}-{args.resource}.json")
+                                                   f"setup-{args.environment}-{args.resource}-{uuid.uuid4().hex}.json")
             prompt(args.environment, args.resource, progress_file)
             print(json.dumps({"service": service, "state": "starting", "progress_file": str(progress_file)}))
         else:
@@ -252,7 +296,7 @@ def main(argv=None) -> int:
     except (KeyboardInterrupt, EOFError):
         return 130
     except Exception as exc:
-        if args.progress_file is not None:
+        if args.progress_file is not None and args.action in ("setup", "prompt"):
             try:
                 _progress(args.progress_file, "failed", [])
             except OSError:

@@ -186,6 +186,116 @@ class CredentialTests(unittest.TestCase):
         self.assertIn("--environment prod --resource storage", arguments[2])
         self.assertNotIn("input", launch.call_args.kwargs)
 
+    def test_wait_continues_until_input_is_saved_and_only_checks_the_target(self):
+        backend = MemoryBackend()
+        with tempfile.TemporaryDirectory() as directory:
+            progress = Path(directory) / "progress.json"
+            credentials._progress(progress, "waiting_for_input", [], "b2c/prod/db")
+
+            def finish_input(_seconds):
+                credentials.store_new(backend, "prod", "db", credentials.Credential("password", "private-user", "private-value"))
+                credentials._progress(progress, "complete", ["b2c/prod/db"])
+
+            with patch.object(credentials.time, "sleep", side_effect=finish_input) as pause:
+                result = credentials.wait_for_setup(backend, "prod", "db", progress)
+            pause.assert_called_once()
+        self.assertEqual(result, {"service": "b2c/prod/db", "state": "complete", "ready": True})
+        self.assertNotIn("private-", json.dumps(result))
+        self.assertEqual(set(backend.records), {("b2c/prod/db", credentials.ACCOUNT)})
+
+    def test_wait_does_not_treat_startup_pending_cancel_or_failure_as_ready(self):
+        backend = MemoryBackend()
+        credentials.store_new(backend, "test", "db", credentials.Credential("password", "private-user", "private-value"))
+        with tempfile.TemporaryDirectory() as directory:
+            progress = Path(directory) / "progress.json"
+            for state in ("starting", "waiting_for_input", "cancelled", "failed"):
+                with self.subTest(state=state):
+                    credentials._progress(progress, state, [], "b2c/test/db")
+                    with patch.object(backend, "get_password", wraps=backend.get_password) as reader:
+                        result = credentials.wait_for_setup(backend, "test", "db", progress, seconds=0)
+                    self.assertFalse(result["ready"])
+                    self.assertEqual(result["state"], state)
+                    reader.assert_not_called()
+
+    def test_wait_requires_saved_valid_credential_even_when_progress_is_complete(self):
+        with tempfile.TemporaryDirectory() as directory:
+            progress = Path(directory) / "progress.json"
+            credentials._progress(progress, "complete", ["b2c/test/db"])
+            with self.assertRaisesRegex(credentials.CredentialError, "^verification_failed$"):
+                credentials.wait_for_setup(MemoryBackend(), "test", "db", progress)
+
+    def test_wait_rejects_wrong_target_without_reading_any_credential(self):
+        backend = MemoryBackend()
+        with tempfile.TemporaryDirectory() as directory:
+            progress = Path(directory) / "progress.json"
+            for state, services, current in (("complete", ["b2c/prod/db"], ""),
+                                              ("waiting_for_input", [], "b2c/test/storage"),
+                                              ("complete", [], "")):
+                credentials._progress(progress, state, services, current)
+                with patch.object(backend, "get_password") as reader:
+                    with self.assertRaisesRegex(credentials.CredentialError, "^progress_target_mismatch$"):
+                        credentials.wait_for_setup(backend, "test", "db", progress)
+                    reader.assert_not_called()
+
+    def test_wait_missing_or_partially_written_progress_is_pending(self):
+        with tempfile.TemporaryDirectory() as directory:
+            progress = Path(directory) / "progress.json"
+            result = credentials.wait_for_setup(MemoryBackend(), "test", "db", progress, seconds=0)
+            self.assertFalse(result["ready"])
+            progress.write_text('{"state":', encoding="utf-8")
+            result = credentials.wait_for_setup(MemoryBackend(), "test", "db", progress, seconds=0)
+            self.assertFalse(result["ready"])
+
+    def test_wait_cli_reports_distinct_outcomes_and_preserves_progress(self):
+        backend = MemoryBackend()
+        credentials.store_new(backend, "test", "db", credentials.Credential("password", "private-user", "private-value"))
+        with tempfile.TemporaryDirectory() as directory:
+            progress = Path(directory) / "progress.json"
+            for state, exit_code in (("starting", 2), ("cancelled", 130), ("failed", 1), ("complete", 0)):
+                with self.subTest(state=state):
+                    credentials._progress(progress, state, ["b2c/test/db"] if state == "complete" else [])
+                    before = progress.read_bytes()
+                    output = io.StringIO()
+                    with patch.object(credentials, "native_backend", return_value=backend), \
+                            patch.object(credentials.time, "monotonic", side_effect=[0, 6]), \
+                            contextlib.redirect_stdout(output):
+                        self.assertEqual(credentials.main(["wait", "--environment", "test", "--resource", "db",
+                                                           "--progress-file", str(progress)]), exit_code)
+                    self.assertEqual(progress.read_bytes(), before)
+                    self.assertEqual(json.loads(output.getvalue())["ready"], state == "complete")
+                    self.assertNotIn("private-", output.getvalue())
+
+    def test_wait_error_does_not_modify_progress_or_expose_file_content(self):
+        with tempfile.TemporaryDirectory() as directory:
+            progress = Path(directory) / "progress.json"
+            progress.write_text('{"state":"private-value"}', encoding="utf-8")
+            before = progress.read_bytes()
+            output = io.StringIO()
+            with patch.object(credentials, "native_backend", return_value=MemoryBackend()), contextlib.redirect_stderr(output):
+                self.assertEqual(credentials.main(["wait", "--environment", "test", "--resource", "db",
+                                                   "--progress-file", str(progress)]), 1)
+            self.assertEqual(progress.read_bytes(), before)
+            self.assertEqual(json.loads(output.getvalue()), {"error": "invalid_progress"})
+
+    def test_each_prompt_returns_a_distinct_progress_file(self):
+        output = io.StringIO()
+        with patch.object(credentials, "native_backend", return_value=MemoryBackend()), \
+                patch.object(credentials, "prompt") as launcher, contextlib.redirect_stdout(output):
+            for _ in range(2):
+                self.assertEqual(credentials.main(["prompt", "--environment", "test", "--resource", "db"]), 0)
+        paths = [call.args[2] for call in launcher.call_args_list]
+        self.assertNotEqual(paths[0], paths[1])
+        self.assertTrue(all(json.loads(line)["state"] == "starting" for line in output.getvalue().splitlines()))
+
+    def test_wait_cli_requires_a_progress_file_and_bounded_duration(self):
+        with patch.object(credentials, "native_backend") as factory, contextlib.redirect_stderr(io.StringIO()):
+            for extra in ([], ["--progress-file", "progress.json", "--seconds", "0"],
+                          ["--progress-file", "progress.json", "--seconds", "31"]):
+                with self.assertRaises(SystemExit) as result:
+                    credentials.main(["wait", "--environment", "test", "--resource", "db", *extra])
+                self.assertEqual(result.exception.code, 2)
+            factory.assert_not_called()
+
 
 if __name__ == "__main__":
     unittest.main()
