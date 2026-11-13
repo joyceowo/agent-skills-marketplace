@@ -1,7 +1,7 @@
 {
   "name": "b2c-platform-tools",
-  "version": "0.9.3",
-  "description": "Diagnose B2C system issues, update work cards, and maintain system knowledge on request.",
+  "version": "0.12.1",
+  "description": "Initialize B2C local settings, diagnose issues, update work cards, and maintain system knowledge on request.",
   "author": {
     "name": "Skill Forge"
   },
@@ -17,7 +17,7 @@
   "interface": {
     "displayName": "B2C Platform Tools",
     "shortDescription": "B2C 系統診斷與知識維護",
-    "longDescription": "辨識系統、查 Notion、核對程式，確認正式／測試環境後唯讀查 DB 與 Storage log，解決與驗證並更新工作卡。系統知識維護依使用者要求執行。",
+    "longDescription": "適用 B2C 平台所有系統／功能模組，以簡短索引快速定位文件與程式。初始化前後端路徑、DB 憑證與 Blob log 來源，按需詢問設定及 Entra 登入，查 Notion、唯讀取證並更新工作卡；沒有模組文件也能分析。",
     "developerName": "Skill Forge",
     "websiteURL": "https://github.com/joyceowo/skill-forge",
     "category": "Productivity",
@@ -27,7 +27,8 @@
     ],
     "defaultPrompt": [
       "使用 b2c-issue-diagnosis，辨識這個問題的系統，先查 Notion，再核對程式並協助解決。",
-      "使用 b2c-system-maintenance，將本次新發現的系統規則、流程、資料關係與設計原因整理到已確認的 Notion 知識頁，標示證據與待確認事項。"
+      "使用 b2c-system-maintenance，將本次新發現的系統規則、流程、資料關係與設計原因整理到已確認的 Notion 知識頁，標示證據與待確認事項。",
+      "使用 b2c-setup，檢查並初始化 B2C 工具的本機前後端路徑與需要的登入設定，允許分項完成。"
     ]
   }
 }

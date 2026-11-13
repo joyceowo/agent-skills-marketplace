@@ -4,7 +4,9 @@
 
 隨附 references/systems/ 是隨外掛版本分發的參考與查找線索，不是系統登記或問答的前置條件。只有明確維護外掛來源的工作才更新它；程式與知識矛盾時保留預期／現況及各自依據，不用舊摘要覆蓋當次實作。
 
-診斷工作卡的位置依 [B2C 預設 Notion 位置](../../b2c-issue-diagnosis/references/systems/b2c-portal/notion.md)。只有使用者明確要求知識維護時，才依維護 Skill 解析既有知識頁或 B2C 系統主頁；一般診斷不建立知識頁。
+共用流程在 [common](../../b2c-issue-diagnosis/references/common/system-maintenance.md)，B2C 專屬資料在 [systems/b2c](../../b2c-issue-diagnosis/references/systems/b2c/index.md)。可選的本機路徑設定依 [初始化](../../b2c-issue-diagnosis/references/common/initialization.md)；它與下列單次分析範圍物件不同，不代表授予讀寫權限。
+
+診斷工作卡的位置依 [B2C 預設 Notion 位置](../../b2c-issue-diagnosis/references/systems/b2c/notion.md)。只有使用者明確要求知識維護時，才依維護 Skill 解析既有知識頁或 B2C 系統主頁；一般診斷不建立知識頁。
 
 ## 可選範圍物件
 

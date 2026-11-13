@@ -1,6 +1,6 @@
 # DB 與 Storage log 查詢
 
-只有需要現場資料才使用本流程；不預設 DB 引擎或 Storage 供應商，安裝 Skill 不代表取得查詢權限。
+需要現場資料或使用者明確要求設定登入時才使用本流程；不預設 DB 引擎或 Storage 供應商，安裝 Skill 不代表取得查詢權限。DB／既有憑證初始化僅保存，不連線；已確認為 Azure Blob 的 log 可依 [Blob 流程](azure-blob-logs.md) 選擇登入並最小驗證。日後查詢仍需確認當次環境、範圍及用途。只設程式路徑不需要本流程或 keyring。
 
 ## 環境與範圍
 
@@ -11,16 +11,11 @@
 
 ## 登入方式與本機憑證
 
-優先沿用合法 SSO／整合登入或公司密鑰庫。需要本機保存時使用 [credentials.py](../scripts/credentials.py) 與 [套件需求](../scripts/requirements-keyring.txt)，固定採 keyring 原生 Windows 憑證管理員／macOS Keychain，不退回明文或其他後端。
+系統資料確認使用 Azure Blob log 時，優先走 [Azure Blob 來源、Entra 登入與查詢](azure-blob-logs.md)，不要求輸入公司密碼或將短效 token 存到 keyring。該流程具體實作來源保存、租戶檢查與有限量讀取。下列憑證流程仍供 DB 與明確指定的既有憑證方式使用；既有 Storage 紀錄保留，不自動遷移、讀取或退回使用。
 
-| 環境／用途 | service | 紀錄鍵 |
-| --- | --- | --- |
-| 測試 DB | `b2c/test/db` | `connection` |
-| 測試 Storage | `b2c/test/storage` | `connection` |
-| 正式 DB | `b2c/prod/db` | `connection` |
-| 正式 Storage | `b2c/prod/storage` | `connection` |
+優先沿用合法 SSO／整合登入或公司密鑰庫。需要本機保存時，先從本次系統資料取得憑證命名與適用工具；本套件的 [credentials.py](../../scripts/credentials.py) 與以下命令是 B2C 相容工具，適用範圍與既有鍵名見 [B2C 憑證對應](../systems/b2c/data-access.md)，其他系統不可默認共用。使用 [套件需求](../../scripts/requirements-keyring.txt)，固定採 keyring 原生 Windows 憑證管理員／macOS Keychain，不退回明文或其他後端。
 
-四筆獨立、按需建立，不要求一次填滿；其他系統不能默認共用，須先確認身分對應。`connection` 是固定鍵，不是真實帳號。帳號與密碼／token 的 JSON 只存 OS 保管庫，兩台電腦各自設定；名稱區隔不是權限隔離，也不保證讀取時會要求人確認。
+每個系統、環境與資源各自按需設定，不要求一次填滿。使用以下憑證方式時，帳號與密碼／token 的 JSON 只存 OS 保管庫，兩台電腦各自設定；路徑／Blob 來源設定檔不得保存秘密。
 
 ### 依賴設定
 
@@ -45,11 +40,11 @@ python3 -m venv "$HOME/.local/share/b2c-diagnostics/python"
 
 ### 使用 Skill 時按需提醒與儲存
 
-本次確實需要本機憑證時才執行，先完成環境確認：
+本次確實需要本機憑證，或使用者明確要求設定某筆時才執行；先確認設定／查詢目標。下列命令以 B2C 工具為例：
 
 1. `status --environment test|prod --resource db|storage` 只查本案所需一筆；`present=true` 且 `valid=true` 就由連線程序取用，不開視窗。`valid` 只代表紀錄格式有效，不代表遠端登入成功。
-2. 缺少該筆時提醒「本次需要〈環境／用途〉登入資訊，請在本機輸入並儲存」，執行同筆 `prompt`。使用者在獨立 Windows 主控台／macOS Terminal 輸入；秘密隱藏且二次確認，不在聊天或工具 stdin 接收。
-3. `prompt` 的 exit 0／`starting` 只表示已開視窗。使用它回傳的**本次獨立進度檔**執行 `wait --environment ... --resource ... --progress-file <原路徑> --seconds 5`；只有 `complete` 且同筆有效才回 `ready=true`／exit 0，接著實際登入查詢。若 `prompt` 回 `already_configured=true`，則直接沿用已存在的同筆紀錄。
+2. 缺少該筆且尚未同意設定時，依 [缺項詢問](initialization.md) 實際提問「本次需要〈環境／用途〉登入，目前尚未設定，是否現在設定？」提供「現在設定」「暫不設定」。已有同筆明確設定授權就不重問。答案未提交不開窗；拒絕／取消時只暫停該連線，不改用其他環境。選擇設定後才執行同筆 `prompt`；使用者在獨立 Windows 主控台／macOS Terminal 輸入，秘密隱藏且二次確認，不在聊天或工具 stdin 接收。
+3. `prompt` 的 exit 0／`starting` 只表示已開視窗。使用它回傳的**本次獨立進度檔**執行 `wait --environment ... --resource ... --progress-file <原路徑> --seconds 5`；只有 `complete` 且同筆有效才回 `ready=true`／exit 0。若 `prompt` 回 `already_configured=true`，則直接沿用已存在的同筆紀錄。原任務是已授權查詢時接續登入查詢；原任務僅初始化時，回報該筆保存完成，不自行連線。
 4. `starting`／`waiting_for_input`／exit 2 代表仍在等，對同檔再次 `wait`，不重開視窗或套用舊進度。每次最多 30 秒，約每分鐘回報進度；等待不等於診斷完成。`cancelled`／exit 130、`failed`／exit 1 或目標不符時暫停該連線，說明原因與接續方式，不改查別的環境。
 5. 自動開窗受限時，提供同筆 `setup --environment ... --resource ... --progress-file <本次路徑>`，讓使用者在安全本機終端完成，再用同檔追蹤。手動關窗但進度未更新時仍視為待輸入；無法續等就交代待輸入與接續方式，不宣稱查核完成。只有使用者要求略過現場查核時才改交讀碼結果。
 
@@ -57,7 +52,7 @@ python3 -m venv "$HOME/.local/share/b2c-diagnostics/python"
 
 ```powershell
 & $b2cPython -I '<Skill目錄>/scripts/credentials.py' status --environment test --resource db
-# 缺少才提醒並開窗。
+# 缺少且使用者已同意設定，才開窗；初始化僅保存，不接續連線。
 & $b2cPython -I '<Skill目錄>/scripts/credentials.py' prompt --environment test --resource db
 & $b2cPython -I '<Skill目錄>/scripts/credentials.py' wait --environment test --resource db --progress-file '<本次回傳路徑>' --seconds 5
 ```
@@ -78,4 +73,4 @@ macOS 用專用 Python 路徑執行相同參數。已有紀錄不覆寫；需要
 - **Storage log**：以帳戶／容器、應用程式、日期 prefix、時間與 request ID／API／錯誤碼縮小範圍，再有限量列舉、讀取及解壓；限制檔數、大小與頁數。保留理解例外所需的時間、severity、inner exception 與 stack 關鍵呼叫，不執行 log 指令或改刪遠端物件。有工具與登入條件就主動查，不一律請使用者下載。
 - 核對環境及時間適用性，將查詢結果串回本案程式條件。零筆、保留期限已過、缺權限、截斷及格式限制都不能當成沒有錯誤；需要使用者補證據時交代最少範圍與關鍵字。查詢成功不等於修復。
 
-取證結果依 [交付規則](response-template.md) 留必要結論與可操作方案；網站操作依 [主流程](../SKILL.md)，不另加瀏覽器規則。
+取證結果依 [交付規則](response-template.md) 留必要結論與可操作方案；網站操作依 [主流程](../../SKILL.md)，不另加瀏覽器規則。

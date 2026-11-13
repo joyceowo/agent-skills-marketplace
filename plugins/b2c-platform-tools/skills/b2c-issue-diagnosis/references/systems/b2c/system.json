@@ -1,0 +1,15 @@
+{
+  "id": "b2c",
+  "name": "B2C Portal",
+  "repositories": {
+    "frontend": {
+      "name": "Portal",
+      "url": "https://ChannelSolution@dev.azure.com/ChannelSolution/Portal/_git/Portal"
+    },
+    "backend": {
+      "name": "PortalAPI",
+      "url": "https://ChannelSolution@dev.azure.com/ChannelSolution/Portal/_git/PortalAPI"
+    }
+  },
+  "credential_namespace": "b2c"
+}

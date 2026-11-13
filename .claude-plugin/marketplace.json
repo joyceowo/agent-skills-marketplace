@@ -20,7 +20,7 @@
     {
       "name": "b2c-platform-tools",
       "source": "./plugins/b2c-platform-tools",
-      "description": "Diagnose B2C system issues, update work cards, and maintain system knowledge on request."
+      "description": "Initialize B2C local settings, diagnose issues, update work cards, and maintain system knowledge on request."
     },
     {
       "name": "b2c-notice",

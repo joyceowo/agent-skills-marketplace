@@ -4,6 +4,8 @@
 
 聊天預設只寫簡短結論、實際處理狀態、必要的使用者動作及 Notion 同卡連結。完整修正、SQL、查核與驗收留同卡；只有使用者要求展開或 Notion 無法同步時，才在對話補充必要內容並如實說明未同步部分，不另存檔案備援。
 
+診斷開頭先讓讀者看懂哪裡錯、正確應如何，以及影響或觸發條件；必要證據與限制緊接相關結論，不讓讀者從查核過程自行找原因。Git 引入時間與 commit 連結整併在原因說明；完整時間線只在比較版本會影響判斷時保留。
+
 工作卡每段都檢查「刪除後是否影響判斷、修改、執行或驗收」；不影響就省略。必要因果用一句話交代，不列主機／資料庫名稱、精確查詢時間、無關關聯筆數、共同欄位或完整取值鏈路；只有這些差異確實影響處理或使用者要求追查時才展開。工具阻礙在聊天說明，卡片只列需使用者處理的動作與影響，不堆疊保留語。
 
 程式已核對、現場查詢、使用者確認及假說必須分清楚；只保留本案必要證據與限制。Notion 的結構、色彩、圖片與人工結案統一依 [工作追蹤](notion-workflow.md)，不另套報告欄位。
@@ -37,6 +39,6 @@
 
 ## 按需結構化報告
 
-只有使用者要求完整 JSON 才用 [diagnosis.schema.json](schemas/diagnosis.schema.json)。`solution_steps` 記同卡連結／明細、操作及預期結果，`test_results` 記實際證據，`user_reply` 遵循上述聊天格式；`changed_files` 只列實際異動，只有 Notion／SQL 內容交付時填 `[]`。未知文字填「尚未確認」，清單用 `[]`；系統未知時名稱／ID 用空字串。
+只有使用者要求完整 JSON 才用 [diagnosis.schema.json](../schemas/diagnosis.schema.json)。`solution_steps` 記同卡連結／明細、操作及預期結果，`test_results` 記實際證據，`user_reply` 遵循上述聊天格式；`changed_files` 只列實際異動，只有 Notion／SQL 內容交付時填 `[]`。未知文字填「尚未確認」，清單用 `[]`；系統未知時名稱／ID 用空字串。
 
 分類為 USAGE_ERROR／CODE_BUG／FEATURE_REQUEST／UNKNOWN，影響為 TARGET_SYSTEM／SHARED_COMPONENT／UNDETERMINED；只有實際越出可存取或授權範圍才用 OUT_OF_SCOPE。未驗證修復用 PROPOSED_FIX／NEEDS_INFO，不用 FIXED。Schema／範圍工具只能檢查格式與聲明一致性，不能證明業務結果；操作見 [可選工具](repository-workflow.md#可選檢查工具)。
