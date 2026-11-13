@@ -9,6 +9,7 @@
 | 啟動、共用註冊 | `A/Program.cs` → `A/Providers/StarupProvider.cs`（檔名如此）、`OpenIddictProvider.cs`、`DependencyInjectionProvider.cs`、`DbContextExtensions.cs`；詳見 [共用機制](shared-mechanisms.md)。 |
 | 功能 API | `A/Areas/<Area>/Controllers/`，路由可能來自同目錄 Base Controller；Area 目錄的點號不一定等於 URL 斜線。全域 Token／檔案入口另在 `A/Controllers/`。 |
 | 邏輯與資料 | 對應 Area 的 `Service/`、`Repository/`、`Model/`、`Entity/`、`Profiles/`；依引用定位，不假設每區都有全部目錄或相同模式。 |
+| DB 資料來源、關聯與副作用 | 按需讀 [DB 導覽](database.md)，查看連線設定鍵、跨表／ERP 相依、匯入與簽核副作用及待確認限制；導覽隨 Skill 分發，實際判斷仍核對當次後端程式。 |
 | 已有業務說明 | 按 [功能索引](functions.md) 連到原文件，例如 `PortalAPI:Docs/ShareRate/README.md` 及其 Base／Calculation 文件；根 README 仍為範本，不是完整專案規格。 |
 | 編譯與測試入口 | `A/PortalAPI.csproj` 目前為 `net8.0`；`PortalAPI:PortalAPI.Tests/PortalAPI.Tests.csproj`。本次未執行業務測試或啟動 API。 |
 

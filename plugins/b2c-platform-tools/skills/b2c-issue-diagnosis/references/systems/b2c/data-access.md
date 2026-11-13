@@ -10,6 +10,8 @@
 
 ## DB 與既有 Storage 憑證
 
+需要定位 DB 資料來源、關聯或副作用時，先讀 [DB 導覽](database.md)，再核對當次程式及定義；單純設定憑證不要求讀取，也不因此連線 DB。
+
 依 [共用資料存取](../../common/data-log-access.md) 設定與取用；此資料僅適用 B2C，不授予查詢權限。[system.json](system.json) 的 `credential_namespace` 為 `b2c`，沿用既有鍵，不遷移或要求已設定的使用者重填。
 
 | 環境／用途 | service | 紀錄鍵 |
