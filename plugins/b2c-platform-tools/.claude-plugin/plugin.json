@@ -1,6 +1,6 @@
 {
   "name": "b2c-platform-tools",
-  "version": "0.12.2",
+  "version": "0.12.3",
   "description": "Initialize B2C local settings, diagnose issues, update work cards, and maintain system knowledge on request.",
   "author": {
     "name": "Skill Forge"
