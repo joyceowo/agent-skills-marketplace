@@ -1,7 +1,7 @@
 {
   "name": "b2c-platform-tools",
-  "version": "0.12.6",
-  "description": "Initialize B2C local settings, diagnose issues, update work cards, and maintain system knowledge on request.",
+  "version": "0.13.0",
+  "description": "Configure B2C tools, diagnose issues and access requests, update work cards, and maintain reusable handbooks when enabled.",
   "author": {
     "name": "Skill Forge"
   },
@@ -17,7 +17,7 @@
   "interface": {
     "displayName": "B2C Platform Tools",
     "shortDescription": "B2C 系統診斷與知識維護",
-    "longDescription": "適用 B2C 平台所有系統／功能模組，以簡短索引快速定位文件與程式。初始化前後端路徑、DB 憑證與 Blob log 來源，按需詢問設定及 Entra 登入，查 Notion、唯讀取證並更新工作卡；沒有模組文件也能分析。",
+    "longDescription": "適用 B2C 平台所有系統／功能模組。初始化程式路徑、DB／Blob 與維運手冊目的地及開關，查用 Notion 手冊、診斷問題與權限申請，按需唯讀取證並更新工作卡；已啟用時自動累積常見問題與申請流程。",
     "developerName": "Skill Forge",
     "websiteURL": "https://github.com/joyceowo/skill-forge",
     "category": "Productivity",
