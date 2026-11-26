@@ -59,7 +59,7 @@ Portal／PortalAPI 的預設來源、前後端定位、Notion 及憑證對應讀
 
 - 「上版與通知」是否依[圖文通知規則](references/common/notion-workflow.md#上版與通知)主動配圖，優先標註實際案例；無可用案例畫面才製作說明圖，純狀態通知可只用文字？
 
-- 每次新增或更新 Notion 後，必須依[更新後的內容取捨驗證](references/common/notion-workflow.md#更新後的內容取捨驗證)回讀實際內容，完成必要性檢查及刪減後再交付。
+- 每次新增或更新 Notion 後，必須依[更新後的內容取捨驗證](references/common/notion-workflow.md#更新後的內容取捨驗證)回讀實際內容；在格式與狀態核對之外，另做一次內容刪減回讀，檢查欄位重複、同案整併及篇幅是否符合本案複雜度。完成必要刪減並回讀修正處後才交付。
 
 - 依[交付格式](references/common/response-template.md#聊天與工作卡)確認工作卡只留本案直接相關內容，移除查核流水帳及其他案件的排除說明；依[工作類型判定](references/common/notion-workflow.md#工作類型判定)核對操作／輸入錯誤的分類，不從錯誤現象直接判為「問題修正」。
 
