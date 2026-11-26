@@ -43,7 +43,7 @@ Portal／PortalAPI 的預設來源、前後端定位、Notion 及憑證對應讀
 ## 4. 解決與驗證
 
 - 只問原因／解法就交付方案；已要求修復／開發就沿用授權實作。操作問題給可執行操作，程式 Bug 給修復，需求給行為差異與驗收；證據不足就明列影響判斷的最少缺項。
-- 資料更新優先提供 SQL，遵循 [交付與 SQL 規則](references/common/response-template.md)。所有異動 SQL 必須提供執行參數，預設只檢查，明確切換後才正式執行；只檢查不得先異動再回復。修正／查詢／驗證 SQL 只放同一 Notion 工作卡，不額外產生檔案。
+- 資料更新優先提供 SQL，遵循 [交付與 SQL 規則](references/common/response-template.md)。所有異動 SQL 必須提供執行參數，預設只檢查，明確切換後才正式執行；只檢查不得先異動再回復。個案修正／查詢／驗證 SQL 留同一 Notion 工作卡，不額外產生檔案；維運手冊可保存共用 SQL 範本。套用手冊時，依[範本與個案 SQL](references/common/response-template.md#範本與個案-sql)產生本案可獨立使用的完整版本，參數取得方式依[手冊格式](references/common/handbook-workflow.md#人工與-ai-共用格式)。
 - 做與修改直接相關的驗證，區分讀碼、工具實測與人工驗收。未修正並通過驗證，不宣稱已修好。DB 寫入、部署、合併與通知發送各依實際授權，唯讀查詢授權不涵蓋這些動作。
 
 ## 5. 更新與交付
