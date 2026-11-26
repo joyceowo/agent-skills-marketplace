@@ -34,7 +34,7 @@
 
 ## 流程與系統資料
 
-- [Notion 工作追蹤](skills/b2c-issue-diagnosis/references/common/notion-workflow.md)：卡片確認、結構、色彩、圖片及人工驗收。
+- [Notion 工作追蹤](skills/b2c-issue-diagnosis/references/common/notion-workflow.md)：卡片確認、工作類型與處理狀況、結構、色彩、圖片及人工驗收；區分「程式異動中」與「可回覆使用者」，備妥回覆不代表已通知或結案。
 - [程式診斷與交付收尾](skills/b2c-issue-diagnosis/references/common/repository-workflow.md)：修改範圍、驗證、分支與 Commit。
 - [資料存取](skills/b2c-issue-diagnosis/references/common/data-log-access.md)：先確認環境與範圍；本機帳密按需存 OS keyring，等待輸入完成才續查，不輸出秘密。
 - [Azure Blob log](skills/b2c-issue-diagnosis/references/common/azure-blob-logs.md)：非秘密來源設定、Entra 互動登入與有限量唯讀查詢；保留多行例外，回報讀取與截斷限制。
