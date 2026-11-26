@@ -4,9 +4,9 @@
 
 | Skill | 用途 |
 | --- | --- |
-| [b2c-setup](skills/b2c-setup/SKILL.md) | 初始化前後端路徑、DB 憑證與 Blob log 來源／登入；可分項設定。 |
-| [b2c-issue-diagnosis](skills/b2c-issue-diagnosis/SKILL.md) | 辨識系統、查 Notion、核對程式，按需唯讀查 DB／Storage，依授權修復並更新同張工作卡。 |
-| [b2c-system-maintenance](skills/b2c-system-maintenance/SKILL.md) | 使用者明確要求時，整理可重用系統知識與依據。 |
+| [b2c-setup](skills/b2c-setup/SKILL.md) | 初始化程式路徑、DB／Blob 與維運手冊目的地、自動維護開關；可分項設定。 |
+| [b2c-issue-diagnosis](skills/b2c-issue-diagnosis/SKILL.md) | 查用手冊、診斷問題／處理權限申請，按需唯讀取證，依授權處理並更新工作卡；已啟用時僅自動維護常用且可照做的手冊。 |
+| [b2c-system-maintenance](skills/b2c-system-maintenance/SKILL.md) | 明確要求時整理系統知識，或修訂、合併與停用維運手冊。 |
 
 適用 B2C 平台內所有系統／功能模組，共用同一套診斷、初始化與文件定位流程。共用流程放在 `skills/b2c-issue-diagnosis/references/common/`；預設來源、定位索引與模組參考集中於 [systems/b2c](skills/b2c-issue-diagnosis/references/systems/b2c/index.md)。模組沿用 `--system b2c`，沒有專屬文件或尚未列索引也能分析。B2C 以外的獨立系統不套用 B2C 登入。
 
@@ -24,6 +24,14 @@
 
 已有有效設定不重問；本次明確指定的路徑優先，暫用不覆寫保存值。單純 Notion／一般問答或已提供片段不要求初始化；路徑保存不代表授予寫入權限。初始化不自動生成專案指引。設定工具與完整狀態／命令見 [初始化與缺項詢問](skills/b2c-issue-diagnosis/references/common/initialization.md)。
 
+## 維運手冊
+
+先提供自己有權限的 Notion「B2C 維運手冊」父頁／資料庫，並指定是否啟用自動維護；可單獨設定，不需先完成路徑或 DB 初始化。目的地、開關及允許類型用 `handbooks.py` 保存在 `~/.local/share/b2c-diagnostics/handbooks.json`，更新外掛後仍保留，私人 ID 不隨套件分發。`disable` 保留位置並停用自動寫入；`clear` 移除本機該系統設定，不刪 Notion。
+
+日常診斷先查手冊並核對條件；自動維護預設不新增，僅已確認常用且能照步驟處理與驗證的「常見問題／權限申請」才收錄，優先更新既有手冊，不逐案重問文字收錄。單次 Bug、程式修復與個案修正留工作卡。草稿同樣須符合收錄門檻，只用於確有常態需要、流程具體但待驗證的手冊；驗證通過才標可使用，衝突標待更新，人工停用不自動復用。工作卡保存本次對象、核准、SQL 與結果，手冊提供人工可照做的共用流程；寫後回讀並分開回報案件／同步狀態。
+
+此流程在技能執行時運作，不監控 Notion 後續操作；人工驗收後再次執行才補同步。未更新的已安裝快取不會自動取得本次來源修改，依宿主正常流程更新並開新工作階段後使用。設定存在也不代表遠端權限或業務操作授權。完整設定、收錄與範本見 [共用手冊流程](skills/b2c-issue-diagnosis/references/common/handbook-workflow.md)。
+
 ## 流程與系統資料
 
 - [Notion 工作追蹤](skills/b2c-issue-diagnosis/references/common/notion-workflow.md)：卡片確認、結構、色彩、圖片及人工驗收。
@@ -32,6 +40,7 @@
 - [Azure Blob log](skills/b2c-issue-diagnosis/references/common/azure-blob-logs.md)：非秘密來源設定、Entra 互動登入與有限量唯讀查詢；保留多行例外，回報讀取與截斷限制。
 - [交付與 SQL](skills/b2c-issue-diagnosis/references/common/response-template.md)：SQL 優先與簡潔交付，不預設建立個案檔案。
 - [共用系統知識維護](skills/b2c-issue-diagnosis/references/common/system-maintenance.md)：證據分類、保存與更新規則。
+- [維運手冊](skills/b2c-issue-diagnosis/references/common/handbook-workflow.md)：目的地與開關、查用、收錄去重、人工範本與寫入驗證。
 
 共用資源只維護一份；setup 與 maintenance 入口引用 diagnosis 的資源，需一起安裝完整外掛，不支援單獨上傳這兩個技能資料夾。
 

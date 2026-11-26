@@ -1,11 +1,11 @@
 ---
 name: b2c-system-maintenance
-description: 維護 Notion 中可重用的系統知識，保存業務規則、流程、資料關係、共用限制與設計原因，區分程式已核對、使用者已確認與待確認推測。僅在使用者明確要求整理系統知識時使用；不由問題診斷自動觸發。
+description: 依明確要求整理 Notion 系統知識或維運手冊，保存可重用規則、排查與權限申請流程及依據；支援手冊修訂、合併與停用。日常手冊維護由診斷技能依已啟用設定及收錄門檻執行。
 ---
 
 # 系統知識維護
 
-僅在使用者明確要求整理或維護系統知識時執行；日常診斷、修復及工作卡更新不自動觸發。保留既有技能識別碼，與診斷共用同一份流程及系統資料。
+使用者明確要求整理系統知識或維運手冊時執行；手冊修訂、合併與停用依 [共用手冊流程](../b2c-issue-diagnosis/references/common/handbook-workflow.md)，共用收錄門檻、範本、去重與證據規則。日常診斷僅自動維護常用且可照做的手冊，由診斷入口依已啟用設定執行，不自動擴為全面系統知識整理或歷史案件盤點；批次整理須有指定範圍。保留既有技能識別碼。
 
 1. 辨識當次系統；B2C 的 Notion 主頁、知識父位置及專屬索引讀 [B2C 系統資料](../b2c-issue-diagnosis/references/systems/b2c/index.md) 與 [Notion 目的地](../b2c-issue-diagnosis/references/systems/b2c/notion.md)，不把預設套用其他系統。
 2. 依 [共用系統知識維護](../b2c-issue-diagnosis/references/common/system-maintenance.md) 保存業務規則、流程、資料關係、共用限制與設計原因，區分程式已核對、使用者已確認與待確認推測。保留他人資料、歷史及人工驗收，不自動修改安裝快取。
