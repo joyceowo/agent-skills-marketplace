@@ -1,6 +1,6 @@
 {
   "name": "b2c-platform-tools",
-  "version": "0.13.0",
+  "version": "0.13.1",
   "description": "Configure B2C tools, diagnose issues and access requests, update work cards, and maintain reusable handbooks when enabled.",
   "author": {
     "name": "Skill Forge"
